@@ -1,150 +1,62 @@
 # Lisa Flow
 
-> Structured AI development workflow using GitHub Spec Kit + Ralph-style self-healing tests
+> Structured AI development with automatic TDD and self-healing tests
 
-A sequential workflow script that runs [GitHub Spec Kit](https://github.com/github/spec-kit) phases with fresh Claude sessions, followed by an automatic self-healing test loop inspired by [Ralph Wiggum Loop](https://ghuntley.com/loop/).
-
-## Inspiration
-
-This project combines two approaches:
-
-| Source | Contribution |
-|--------|--------------|
-| [Ralph Loop](https://ghuntley.com/loop/) by [Geoffrey Huntley](https://github.com/ghuntley) | Self-healing test loop - iterates until tests pass |
-| [GitHub Spec Kit](https://github.com/github/spec-kit) | Structured specification phases |
-
-### Why "Lisa"?
-
-Both names come from *The Simpsons*:
-
-| Character | Approach | Used For |
-|-----------|----------|----------|
-| **Ralph Wiggum** | Persistent but chaotic - keeps trying until it works | Self-healing test loop |
-| **Lisa Simpson** | Methodical and structured - plans before acting | Spec Kit phases |
-
-Lisa Flow is the best of both: **structured planning** (Lisa) + **persistent self-correction** (Ralph).
+Combines [GitHub Spec Kit](https://github.com/github/spec-kit) phases with a [Ralph-style](https://ghuntley.com/loop/) self-healing test loop.
 
 ## Requirements
 
-- [Claude Code](https://github.com/anthropics/claude-code) - Anthropic's CLI for Claude
-- [GitHub Spec Kit](https://github.com/github/spec-kit) - Specification framework for AI-assisted development
+- [Claude Code](https://github.com/anthropics/claude-code)
+- [GitHub Spec Kit](https://github.com/github/spec-kit)
 
 ## Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/JohnCari/lisa-flow.git
-cd lisa-flow
-
-# Make the script executable
-chmod +x lisa-flow.sh
-
-# Optionally, add to your PATH
-cp lisa-flow.sh /usr/local/bin/lisa-flow
+chmod +x lisa-flow/lisa-flow.sh
 ```
 
 ## Usage
 
 ```bash
-./lisa-flow.sh "your feature description" [max_test_iterations]
+./lisa-flow.sh "feature description" [max_test_iterations]
 ```
 
-### Arguments
-
-| Argument | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `feature description` | Yes | - | What to build |
-| `max_test_iterations` | No | 5 | Max test/fix cycles before stopping |
+**Tests are automatically included** - no need to specify "with tests".
 
 ### Examples
 
 ```bash
-# Default: 5 test iterations max
-./lisa-flow.sh "Build a REST API for user management with JWT authentication"
-
-# Custom: 10 test iterations max
-./lisa-flow.sh "Implement shopping cart with checkout flow" 10
+./lisa-flow.sh "Build user auth API"
+./lisa-flow.sh "Implement shopping cart" 10
 ```
 
 ## How It Works
 
-Lisa Flow runs in two phases:
-
-### Phase 1: Lisa Flow (Structured Spec Kit)
-
 ```
-SPECIFY  -->  PLAN  -->  TASKS  -->  IMPLEMENT
+SPECIFY → PLAN → TASKS → IMPLEMENT → TEST LOOP
 ```
 
-Each step runs in a **fresh Claude session**. State persists via filesystem + git.
+1. **Specify** - Creates spec with TDD requirement (automatic)
+2. **Plan** - Technical implementation plan
+3. **Tasks** - Breaks down into tasks.md
+4. **Implement** - Builds the feature
+5. **Test Loop** - Runs tests, fixes failures, repeats until pass
 
-### Phase 2: Ralph Test Loop (Self-Healing)
+The test loop reads the latest `tasks.md` and iterates until all tests pass or max iterations reached.
 
-```
-┌─────────────────────────────────────┐
-│     READ tasks.md & RUN TESTS       │
-└──────────────┬──────────────────────┘
-               │
-        Pass? ─┴─ Fail?
-         │          │
-       EXIT    CLAUDE FIXES CODE
-                    │
-                    ↓
-               (repeat until pass or max iterations)
-```
+## Inspiration
 
-After implementation, the script:
-1. **Finds latest `tasks.md`** - Searches `specs/` and `.specify/specs/` for the most recently modified tasks.md
-2. **Runs tests** defined in the tasks
-3. If tests fail, **Claude analyzes and fixes** the code
-4. **Repeats** until all tests pass or max iterations reached
+| Source | Contribution |
+|--------|--------------|
+| [Ralph Loop](https://ghuntley.com/loop/) by Geoffrey Huntley | Self-healing test loop |
+| [GitHub Spec Kit](https://github.com/github/spec-kit) | Structured spec phases |
 
-Since Spec Kit creates folders like `specs/001-feature/tasks.md`, `specs/002-feature/tasks.md`, the script automatically finds and uses the latest one.
+> *"Trust the AI to self-identify, self-correct, and self-improve."* — Geoffrey Huntley
 
-> *"Tests, builds, and lints reject invalid work. The agent must fix issues before committing. Trust the AI to self-identify, self-correct, and self-improve."* — Geoffrey Huntley
+## Security
 
-## Complete Workflow
-
-```
-============================================
-  LISA FLOW - Structured AI Development
-============================================
-
-=== SPECIFY ===
-(Claude creates specification)
-
-=== PLAN ===
-(Claude creates technical plan)
-
-=== TASKS ===
-(Claude breaks down into tasks → tasks.md)
-
-=== IMPLEMENT ===
-(Claude implements the code)
-
-============================================
-  RALPH TEST LOOP - Self-Healing Tests
-============================================
-
---- Test iteration 1 of 5 ---
-(Claude reads tasks.md, runs tests, fixes failures)
-
---- Test iteration 2 of 5 ---
-
-=== ALL TESTS PASSED ===
-Lisa completed successfully after 2 iteration(s).
-```
-
-## Security Note
-
-This script uses `--dangerously-skip-permissions` which grants Claude full system access. Use in trusted environments only.
-
-## References
-
-- [Ralph Loop - Geoffrey Huntley](https://ghuntley.com/loop/)
-- [Ralph Wiggum Plugin - Anthropic](https://github.com/anthropics/claude-code/blob/main/plugins/ralph-wiggum/README.md)
-- [GitHub Spec Kit](https://github.com/github/spec-kit)
-- [Claude Code](https://github.com/anthropics/claude-code)
+Uses `--dangerously-skip-permissions`. Use in trusted environments only.
 
 ## License
 
