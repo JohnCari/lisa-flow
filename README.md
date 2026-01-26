@@ -75,7 +75,7 @@ Each step runs in a **fresh Claude session**. State persists via filesystem + gi
 
 ```
 ┌─────────────────────────────────────┐
-│           RUN TESTS                 │
+│     READ tasks.md & RUN TESTS       │
 └──────────────┬──────────────────────┘
                │
         Pass? ─┴─ Fail?
@@ -87,21 +87,12 @@ Each step runs in a **fresh Claude session**. State persists via filesystem + gi
 ```
 
 After implementation, the script:
-1. **Auto-detects** your test framework (npm/cargo/pytest/go)
-2. **Runs tests** and captures output
-3. If tests fail, **Claude analyzes failures** and fixes the code
+1. **Reads `tasks.md`** - The same file Spec Kit created
+2. **Runs tests** defined in the tasks
+3. If tests fail, **Claude analyzes and fixes** the code
 4. **Repeats** until all tests pass or max iterations reached
 
 > *"Tests, builds, and lints reject invalid work. The agent must fix issues before committing. Trust the AI to self-identify, self-correct, and self-improve."* — Geoffrey Huntley
-
-## Supported Test Frameworks
-
-| Framework | Detection |
-|-----------|-----------|
-| npm test | `package.json` exists |
-| cargo test | `Cargo.toml` exists |
-| pytest | `pyproject.toml`, `setup.py`, or `tests/` exists |
-| go test | `go.mod` exists |
 
 ## Complete Workflow
 
@@ -117,7 +108,7 @@ After implementation, the script:
 (Claude creates technical plan)
 
 === TASKS ===
-(Claude breaks down into tasks)
+(Claude breaks down into tasks → tasks.md)
 
 === IMPLEMENT ===
 (Claude implements the code)
@@ -127,7 +118,7 @@ After implementation, the script:
 ============================================
 
 --- Test iteration 1 of 5 ---
-Tests failed. Invoking Claude to fix...
+(Claude reads tasks.md, runs tests, fixes failures)
 
 --- Test iteration 2 of 5 ---
 

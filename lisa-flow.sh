@@ -42,41 +42,14 @@ echo ""
 echo "=== IMPLEMENT ==="
 claude -p --dangerously-skip-permissions "/speckit.implement"
 
-# === PHASE 5: TEST LOOP (Ralph Wiggum Style) ===
+# === PHASE 5: TEST & VERIFY (Ralph Style) ===
+# Reads tasks.md to know what to test
 # Inspired by Geoffrey Huntley's Ralph Loop - self-healing until tests pass
-# https://ghuntley.com/loop/
 
 echo ""
 echo "============================================"
 echo "  RALPH TEST LOOP - Self-Healing Tests"
 echo "============================================"
-
-# Auto-detect test command
-detect_test_command() {
-    if [ -f "package.json" ]; then
-        echo "npm test"
-    elif [ -f "Cargo.toml" ]; then
-        echo "cargo test"
-    elif [ -f "pyproject.toml" ] || [ -f "setup.py" ] || [ -d "tests" ]; then
-        echo "pytest"
-    elif [ -f "go.mod" ]; then
-        echo "go test ./..."
-    else
-        echo ""
-    fi
-}
-
-TEST_CMD=$(detect_test_command)
-
-if [ -z "$TEST_CMD" ]; then
-    echo "No test framework detected. Skipping test loop."
-    echo ""
-    echo "=== COMPLETE ==="
-    echo "Lisa has finished implementing: $FEATURE"
-    exit 0
-fi
-
-echo "Detected test command: $TEST_CMD"
 echo "Max iterations: $MAX_TEST_ITERATIONS"
 echo ""
 
@@ -86,13 +59,18 @@ while [ $iteration -lt $MAX_TEST_ITERATIONS ]; do
     iteration=$((iteration + 1))
     echo "--- Test iteration $iteration of $MAX_TEST_ITERATIONS ---"
 
-    # Run tests and capture output
-    set +e
-    TEST_OUTPUT=$($TEST_CMD 2>&1)
-    TEST_EXIT_CODE=$?
-    set -e
+    # Claude reads tasks.md, runs tests, fixes if needed
+    RESULT=$(claude -p --dangerously-skip-permissions "Read the tasks.md file in the specs directory.
+Run all tests defined in the tasks to verify the implementation.
+If any tests fail:
+1. Analyze the failure
+2. Fix the implementation code (do NOT modify tests)
+3. Re-run the tests
 
-    if [ $TEST_EXIT_CODE -eq 0 ]; then
+When ALL tests pass, output exactly: ALL_TESTS_PASS
+If you cannot fix after trying, output exactly: TESTS_FAILED")
+
+    if echo "$RESULT" | grep -q "ALL_TESTS_PASS"; then
         echo ""
         echo "=== ALL TESTS PASSED ==="
         echo "Lisa completed successfully after $iteration iteration(s)."
@@ -100,21 +78,8 @@ while [ $iteration -lt $MAX_TEST_ITERATIONS ]; do
         exit 0
     fi
 
-    echo "Tests failed. Invoking Claude to fix..."
+    echo "Tests not passing yet, continuing..."
     echo ""
-
-    # Claude fixes the code (fresh session each time)
-    claude -p --dangerously-skip-permissions "The tests are failing. Here is the test output:
-
-$TEST_OUTPUT
-
-Analyze the failures and fix the implementation code to make all tests pass.
-IMPORTANT:
-- Do NOT modify the test files
-- Only fix the implementation/source code
-- Focus on the root cause of each failure
-- After fixing, the tests should pass"
-
 done
 
 echo ""
