@@ -49,6 +49,13 @@ cp lisa-flow.sh /usr/local/bin/lisa-flow
 ./lisa-flow.sh "your feature description" [max_test_iterations]
 ```
 
+### Arguments
+
+| Argument | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `feature description` | Yes | - | What to build |
+| `max_test_iterations` | No | 5 | Max test/fix cycles before stopping |
+
 ### Examples
 
 ```bash
@@ -87,10 +94,12 @@ Each step runs in a **fresh Claude session**. State persists via filesystem + gi
 ```
 
 After implementation, the script:
-1. **Reads `tasks.md`** - The same file Spec Kit created
+1. **Finds latest `tasks.md`** - Searches `specs/` and `.specify/specs/` for the most recently modified tasks.md
 2. **Runs tests** defined in the tasks
 3. If tests fail, **Claude analyzes and fixes** the code
 4. **Repeats** until all tests pass or max iterations reached
+
+Since Spec Kit creates folders like `specs/001-feature/tasks.md`, `specs/002-feature/tasks.md`, the script automatically finds and uses the latest one.
 
 > *"Tests, builds, and lints reject invalid work. The agent must fix issues before committing. Trust the AI to self-identify, self-correct, and self-improve."* — Geoffrey Huntley
 
