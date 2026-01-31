@@ -16,22 +16,27 @@ LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/lisa-flow_$(date +%m-%d-%Y_%-I-%M-%S%p).log"
 
+# Timezone (change to your timezone)
+TZ="${TZ:-America/New_York}"
+export TZ
+
 # Colors
 G='\033[0;32m' R='\033[0;31m' Y='\033[1;33m' C='\033[0;36m' W='\033[1;37m' D='\033[2m' N='\033[0m'
 M='\033[0;35m'  # Magenta for SECURITY phase
+O='\033[38;5;202m'  # Orange-red for shadow (Lisa Simpson style)
 
 # Terminal width check
-MIN_WIDTH=75  # Banner is 68 chars + some padding
+MIN_WIDTH=75
 check_terminal_width() {
     local cols=$(tput cols 2>/dev/null || echo 80)
     if [ "$cols" -lt "$MIN_WIDTH" ]; then
-        echo -e "${Y}⚠ Terminal width ($cols) is below recommended ($MIN_WIDTH)${N}"
-        echo -e "${D}  Resize your terminal for best display${N}"
+        echo -e "${Y}⚠ Terminal too narrow ($cols < $MIN_WIDTH)${N}"
         echo ""
     fi
 }
 
 # Phase tracking
+TOTAL_PHASES=7
 declare -a PHASE_TIMES=()
 declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "DESIGN" "IMPLEMENT" "SECURITY" "TEST")
 
@@ -56,21 +61,20 @@ format_time() {
 
 progress_bar() {
     local current=$1 total=$2
-    local width=20
+    local width=30
     local filled=$((current * width / total))
     local empty=$((width - filled))
     local bar=""
     for ((i=0; i<filled; i++)); do bar+="█"; done
     for ((i=0; i<empty; i++)); do bar+="░"; done
-    printf "${G}%s${N}" "$bar"
+    printf "%s" "$bar"
 }
 
 print_summary() {
     local status=$1 total_time=$2
     log ""
-    log "${D}╔══════════════════════════════════════════════════════════════════════╗${N}"
-    log "${D}║${N}  ${W}SUMMARY${N}                                                            ${D}║${N}"
-    log "${D}╠══════════════════════════════════════════════════════════════════════╣${N}"
+    log "${D}─────────────────────────────────────────────${N}"
+    log ""
 
     for i in "${!PHASE_NAMES[@]}"; do
         local idx=$((i + 1))
@@ -84,37 +88,36 @@ print_summary() {
             icon="${D}○${N}"
             time_str="-"
         fi
-        log "${D}║${N}  $icon $(printf '%-12s' "$name") $(printf '%50s' "$time_str") ${D}║${N}"
+        log "  $icon $(printf '%-12s' "$name") $(printf '%10s' "$time_str")"
     done
 
-    log "${D}╠══════════════════════════════════════════════════════════════════════╣${N}"
+    log ""
+    log "${D}─────────────────────────────────────────────${N}"
     if [ "$status" = "success" ]; then
-        log "${D}║${N}  ${G}SUCCESS${N}                                          Total: $(printf '%8s' "$(format_time $total_time)") ${D}║${N}"
+        log "  ${G}SUCCESS${N}  Total: $(format_time $total_time)"
     else
-        log "${D}║${N}  ${R}FAILED${N}                                           Total: $(printf '%8s' "$(format_time $total_time)") ${D}║${N}"
+        log "  ${R}FAILED${N}   Total: $(format_time $total_time)"
     fi
-    log "${D}╚══════════════════════════════════════════════════════════════════════╝${N}"
+    log ""
 }
 
 show_banner() {
     echo ""
-    echo -e "${C}██╗     ██╗███████╗ █████╗       ███████╗██╗      ██████╗ ██╗    ██╗${N}"
-    echo -e "${C}██║     ██║██╔════╝██╔══██╗      ██╔════╝██║     ██╔═══██╗██║    ██║${N}"
-    echo -e "${C}██║     ██║███████╗███████║█████╗█████╗  ██║     ██║   ██║██║ █╗ ██║${N}"
-    echo -e "${C}██║     ██║╚════██║██╔══██║╚════╝██╔══╝  ██║     ██║   ██║██║███╗██║${N}"
-    echo -e "${C}███████╗██║███████║██║  ██║      ██║     ███████╗╚██████╔╝╚███╔███╔╝${N}"
-    echo -e "${C}╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝${N}"
+    echo -e "${Y}██${O}╗     ${Y}██${O}╗${Y}███████${O}╗ ${Y}█████${O}╗       ${Y}███████${O}╗${Y}██${O}╗      ${Y}██████${O}╗ ${Y}██${O}╗    ${Y}██${O}╗${N}"
+    echo -e "${Y}██${O}║     ${Y}██${O}║${Y}██${O}╔════╝${Y}██${O}╔══${Y}██${O}╗      ${Y}██${O}╔════╝${Y}██${O}║     ${Y}██${O}╔═══${Y}██${O}╗${Y}██${O}║    ${Y}██${O}║${N}"
+    echo -e "${Y}██${O}║     ${Y}██${O}║${Y}███████${O}╗${Y}███████${O}║${W}█████${O}╗${Y}█████${O}╗  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║ ${Y}█${O}╗ ${Y}██${O}║${N}"
+    echo -e "${Y}██${O}║     ${Y}██${O}║╚════${Y}██${O}║${Y}██${O}╔══${Y}██${O}║╚════╝${Y}██${O}╔══╝  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║${Y}███${O}╗${Y}██${O}║${N}"
+    echo -e "${Y}███████${O}╗${Y}██${O}║${Y}███████${O}║${Y}██${O}║  ${Y}██${O}║      ${Y}██${O}║     ${Y}███████${O}╗╚${Y}██████${O}╔╝╚${Y}███${O}╔${Y}███${O}╔╝${N}"
+    echo -e "${O}╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝${N}"
     echo ""
 }
 
 if [ -z "$FEATURE" ]; then
     show_banner
-    echo -e "${D}╔══════════════════════════════════════════════════════════════════════╗${N}"
-    echo -e "${D}║${N}  Usage: ./lisa-flow.sh ${C}<feature>${N} ${D}[test_retries]${N}"
-    echo -e "${D}║${N}"
-    echo -e "${D}║${N}  ${W}<feature>${N}       Feature description to implement"
-    echo -e "${D}║${N}  ${D}[test_retries]${N}  Max test fix attempts ${D}(default: 5)${N}"
-    echo -e "${D}╚══════════════════════════════════════════════════════════════════════╝${N}"
+    echo -e "  Usage: ./lisa-flow.sh ${Y}<feature>${N} ${D}[test_retries]${N}"
+    echo ""
+    echo -e "  ${W}<feature>${N}        Feature description"
+    echo -e "  ${D}[test_retries]${N}   Max test attempts ${D}(default: 5)${N}"
     echo ""
     exit 1
 fi
@@ -133,16 +136,14 @@ fi
 
 # Truncate log path if too long
 display_log="$LOG_FILE"
-max_log_len=45
+max_log_len=40
 if [ ${#LOG_FILE} -gt $max_log_len ]; then
     display_log="...${LOG_FILE: -$max_log_len}"
 fi
 
-log "${D}╔══════════════════════════════════════════════════════════════════════╗${N}"
-log "${D}║${N}  Feature:        ${W}$display_feature${N}"
-log "${D}║${N}  Test Retries:   ${W}$MAX_TEST_ITERATIONS${N}"
-log "${D}║${N}  Log:            ${D}$display_log${N}"
-log "${D}╚══════════════════════════════════════════════════════════════════════╝${N}"
+log "  Feature        ${W}$display_feature${N}"
+log "  Test Retries   ${W}$MAX_TEST_ITERATIONS${N}"
+log "  Log            ${D}$display_log${N}"
 log ""
 
 run_phase() {
@@ -151,7 +152,7 @@ run_phase() {
     local start=$(date +%s)
     local exit_code=0
 
-    log "${D}[${N}$(progress_bar $num 7)${D}]${N} ${W}$name${N} ${D}...${N}"
+    log "${D}[${G}$(progress_bar $num $TOTAL_PHASES)${D}]${N} ${num}/${TOTAL_PHASES} ${W}$name${N}"
 
     # Run command, log output, only show on error
     local output
@@ -178,7 +179,7 @@ run_phase 3 "TASKS" "claude -p --dangerously-skip-permissions \"/speckit.tasks $
 PHASE="DESIGN"
 START=$(date +%s)
 exit_code=0
-log "${D}[${N}$(progress_bar 4 7)${D}]${N} ${W}DESIGN${N} ${D}...${N}"
+log "${D}[${G}$(progress_bar 4 $TOTAL_PHASES)${D}]${N} 4/${TOTAL_PHASES} ${W}DESIGN${N}"
 
 LATEST_TASKS=$(ls -t specs/*/tasks.md 2>/dev/null | head -1)
 if [ -z "$LATEST_TASKS" ]; then
@@ -205,7 +206,7 @@ run_phase 5 "IMPLEMENT" "claude -p --dangerously-skip-permissions \"/speckit.imp
 PHASE="SECURITY"
 START=$(date +%s)
 exit_code=0
-log "${D}[${N}$(progress_bar 6 7)${D}]${N} ${M}SECURITY${N} ${D}...${N}"
+log "${D}[${G}$(progress_bar 6 $TOTAL_PHASES)${D}]${N} 6/${TOTAL_PHASES} ${M}SECURITY${N}"
 
 LATEST_TASKS=$(ls -t specs/*/tasks.md 2>/dev/null | head -1)
 if [ -z "$LATEST_TASKS" ]; then
@@ -229,7 +230,7 @@ log ""
 # TEST phase
 PHASE="TEST"
 START_TEST=$(date +%s)
-log "${D}[${N}$(progress_bar 7 7)${D}]${N} ${W}TEST${N} ${D}...${N}"
+log "${D}[${G}$(progress_bar 7 $TOTAL_PHASES)${D}]${N} 7/${TOTAL_PHASES} ${W}TEST${N}"
 
 LATEST_TASKS=$(ls -t specs/*/tasks.md 2>/dev/null | head -1)
 if [ -z "$LATEST_TASKS" ]; then
@@ -241,7 +242,7 @@ echo "Using: $LATEST_TASKS" >> "$LOG_FILE"
 iteration=0
 while [ $iteration -lt $MAX_TEST_ITERATIONS ]; do
     iteration=$((iteration + 1))
-    log "${C}↻ Test Retry $iteration/$MAX_TEST_ITERATIONS${N}"
+    log "  ${C}↻${N} Retry $iteration/$MAX_TEST_ITERATIONS"
 
     RESULT=$(claude -p --dangerously-skip-permissions "Read $LATEST_TASKS. Run all tests. Fix failures (don't modify tests). Output ALL_TESTS_PASS when done or TESTS_FAILED if stuck. $CONTEXT7" 2>&1)
     echo "$RESULT" >> "$LOG_FILE"
@@ -256,13 +257,10 @@ while [ $iteration -lt $MAX_TEST_ITERATIONS ]; do
         log ""
         exit 0
     fi
-
-    # Show output if tests failed on last iteration
-    if [ $iteration -eq $MAX_TEST_ITERATIONS ]; then
-        echo "$RESULT"
-    fi
-    log ""
 done
+
+# Show output if tests failed
+echo "$RESULT"
 
 elapsed_test=$(($(date +%s) - START_TEST))
 PHASE_TIMES[7]=$elapsed_test
