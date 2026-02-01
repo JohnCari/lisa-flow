@@ -38,7 +38,7 @@ check_terminal_width() {
 # Phase tracking
 TOTAL_PHASES=7
 declare -a PHASE_TIMES=()
-declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "DESIGN" "IMPLEMENT" "SECURITY" "TEST")
+declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "SECURITY" "TEST")
 
 # Context7 instructions for headless prompts
 CONTEXT7="Use Context7 MCP to fetch up-to-date docs. Workflow: 1) mcp__plugin_context7_context7__resolve-library-id with library name to get ID. 2) mcp__plugin_context7_context7__query-docs with ID and query."
@@ -174,12 +174,13 @@ run_phase() {
 run_phase 1 "SPECIFY" "claude -p --dangerously-skip-permissions \"/speckit.specify $FEATURE. Include comprehensive tests following Test Driven Development. $CONTEXT7\""
 run_phase 2 "PLAN" "claude -p --dangerously-skip-permissions \"/speckit.plan $CONTEXT7\""
 run_phase 3 "TASKS" "claude -p --dangerously-skip-permissions \"/speckit.tasks $CONTEXT7\""
+run_phase 4 "IMPLEMENT" "claude -p --dangerously-skip-permissions \"/speckit.implement $CONTEXT7\""
 
-# DESIGN phase
-PHASE="DESIGN"
+# BEAUTIFY phase
+PHASE="BEAUTIFY"
 START=$(date +%s)
 exit_code=0
-log "${D}[${G}$(progress_bar 4 $TOTAL_PHASES)${D}]${N} 4/${TOTAL_PHASES} ${W}DESIGN${N}"
+log "${D}[${G}$(progress_bar 5 $TOTAL_PHASES)${D}]${N} 5/${TOTAL_PHASES} ${W}BEAUTIFY${N}"
 
 LATEST_TASKS=$(ls -t specs/*/tasks.md 2>/dev/null | head -1)
 if [ -z "$LATEST_TASKS" ]; then
@@ -188,7 +189,7 @@ if [ -z "$LATEST_TASKS" ]; then
 fi
 echo "Using: $LATEST_TASKS" >> "$LOG_FILE"
 
-output=$(claude -p --dangerously-skip-permissions "/frontend-design:frontend-design Read $LATEST_TASKS and create the frontend design. $CONTEXT7" 2>&1) || exit_code=$?
+output=$(claude -p --dangerously-skip-permissions "/frontend-design:frontend-design Read $LATEST_TASKS to understand the feature requirements. Then review all implemented code files to understand the current UI. Improve the UI/UX applying best practices: visual consistency, accessibility, HCI principles, intuitive layouts, proper spacing, typography, and smooth interactions. $CONTEXT7" 2>&1) || exit_code=$?
 echo "$output" >> "$LOG_FILE"
 if [ "$exit_code" -ne 0 ]; then
     echo "$output"
@@ -196,11 +197,9 @@ if [ "$exit_code" -ne 0 ]; then
 fi
 
 elapsed=$(($(date +%s) - START))
-PHASE_TIMES[4]=$elapsed
-log "${G}✓${N} DESIGN ${D}($(format_time $elapsed))${N}"
+PHASE_TIMES[5]=$elapsed
+log "${G}✓${N} BEAUTIFY ${D}($(format_time $elapsed))${N}"
 log ""
-
-run_phase 5 "IMPLEMENT" "claude -p --dangerously-skip-permissions \"/speckit.implement $CONTEXT7\""
 
 # SECURITY phase
 PHASE="SECURITY"
@@ -215,7 +214,7 @@ if [ -z "$LATEST_TASKS" ]; then
 fi
 echo "Using: $LATEST_TASKS" >> "$LOG_FILE"
 
-output=$(claude -p --dangerously-skip-permissions "Read $LATEST_TASKS. Review all implemented code for security vulnerabilities. Check for OWASP Top 10 issues: injection, XSS, broken auth, sensitive data exposure, XXE, broken access control, security misconfigs, insecure deserialization, vulnerable components, insufficient logging. Fix any issues found. $CONTEXT7" 2>&1) || exit_code=$?
+output=$(claude -p --dangerously-skip-permissions "Read $LATEST_TASKS to understand the feature requirements. Then review all implemented code files applying OWASP Secure Coding Practices: input validation, output encoding, authentication and password management, session management, access control, cryptographic practices, error handling and logging, data protection, communication security, system configuration, database security, file management, memory management, and general secure coding practices. Fix any issues found. $CONTEXT7" 2>&1) || exit_code=$?
 echo "$output" >> "$LOG_FILE"
 if [ "$exit_code" -ne 0 ]; then
     echo "$output"
@@ -244,7 +243,7 @@ while [ $iteration -lt $MAX_TEST_ITERATIONS ]; do
     iteration=$((iteration + 1))
     log "  ${C}↻${N} Retry $iteration/$MAX_TEST_ITERATIONS"
 
-    RESULT=$(claude -p --dangerously-skip-permissions "Read $LATEST_TASKS. Run all tests. Fix failures (don't modify tests). Output ALL_TESTS_PASS when done or TESTS_FAILED if stuck. $CONTEXT7" 2>&1)
+    RESULT=$(claude -p --dangerously-skip-permissions "Read $LATEST_TASKS to understand the feature requirements. Run all tests. Fix failures in implementation code (don't modify tests). Output ALL_TESTS_PASS when done or TESTS_FAILED if stuck. $CONTEXT7" 2>&1)
     echo "$RESULT" >> "$LOG_FILE"
 
     if echo "$RESULT" | grep -q "ALL_TESTS_PASS"; then
