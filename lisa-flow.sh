@@ -41,7 +41,7 @@ declare -a PHASE_TIMES=()
 declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "SECURITY" "TEST")
 
 # Context7 instructions for headless prompts
-CONTEXT7="Use Context7 MCP to fetch up-to-date docs. Workflow: 1) mcp__plugin_context7_context7__resolve-library-id with library name to get ID. 2) mcp__plugin_context7_context7__query-docs with ID and query."
+CONTEXT7="Use Context7 MCP to fetch up-to-date docs. Workflow: 1) mcp__context7__resolve-library-id with library name to get ID. 2) mcp__context7__query-docs with ID and query."
 
 # Error handling
 PHASE="INIT"
