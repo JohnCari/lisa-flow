@@ -1,15 +1,44 @@
 # Lisa Flow
 
-> Structured AI development with automatic TDD and self-healing tests
+> Structured AI development with automatic TDD, UI polish, and security review
 
 Combines [GitHub Spec Kit](https://github.com/github/spec-kit) phases with a [Ralph-style](https://ghuntley.com/loop/) self-healing test loop.
 
 ## Requirements
 
+### Tools
 - [Claude Code](https://github.com/anthropics/claude-code)
-- [GitHub Spec Kit](https://github.com/github/spec-kit)
+- [GitHub CLI](https://cli.github.com/) (gh)
 
-## Installation
+### Claude Code Skills
+- [GitHub Spec Kit](https://github.com/github/spec-kit) - speckit.* skills
+- frontend-design - for BEAUTIFY phase
+
+### MCP Servers
+- [Context7](https://github.com/upstash/context7) - up-to-date library documentation
+
+## Setup
+
+### 1. Install Claude Code Skills
+
+Follow the [Spec Kit installation guide](https://github.com/github/spec-kit#installation).
+
+### 2. Configure Context7 MCP
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  }
+}
+```
+
+### 3. Clone Lisa Flow
 
 ```bash
 git clone https://github.com/JohnCari/lisa-flow.git
@@ -34,14 +63,18 @@ chmod +x lisa-flow/lisa-flow.sh
 ## How It Works
 
 ```
-SPECIFY → PLAN → TASKS → IMPLEMENT → TEST LOOP
+SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → SECURITY → TEST
 ```
 
-1. **Specify** - Creates spec with TDD requirement (automatic)
-2. **Plan** - Technical implementation plan
-3. **Tasks** - Breaks down into tasks.md
-4. **Implement** - Builds the feature
-5. **Test Loop** - Runs tests, fixes failures, repeats until pass
+| Phase | Description |
+|-------|-------------|
+| **Specify** | Creates spec with TDD requirement (automatic) |
+| **Plan** | Technical implementation plan |
+| **Tasks** | Breaks down into tasks.md |
+| **Implement** | Builds the feature |
+| **Beautify** | UI/UX polish (accessibility, HCI, visual consistency) |
+| **Security** | OWASP Secure Coding Practices review (14 areas) |
+| **Test** | Self-healing loop until all tests pass |
 
 The test loop reads the latest `tasks.md` and iterates until all tests pass or max iterations reached.
 
