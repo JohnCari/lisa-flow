@@ -13,9 +13,10 @@ Combines [GitHub Spec Kit](https://github.com/github/spec-kit) phases with a [Ra
 ### Claude Code Skills
 - [GitHub Spec Kit](https://github.com/github/spec-kit) - speckit.* skills
 - frontend-design - for BEAUTIFY phase
+- [CodeRabbit](https://github.com/coderabbitai/coderabbit) - for REVIEW phase
 
 ### MCP Servers
-- [Context7](https://github.com/upstash/context7) - up-to-date library documentation
+- [Context7](https://github.com/upstash/context7) - up-to-date library documentation (works in headless mode with `-p` flag)
 
 ## Setup
 
@@ -63,7 +64,7 @@ chmod +x lisa-flow/lisa-flow.sh
 ## How It Works
 
 ```
-SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → SECURITY → TEST
+SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → SECURITY → REVIEW → TEST
 ```
 
 | Phase | Description |
@@ -74,6 +75,7 @@ SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → SECURITY → TEST
 | **Implement** | Builds the feature |
 | **Beautify** | UI/UX polish (accessibility, HCI, visual consistency) |
 | **Security** | OWASP Secure Coding Practices review (14 areas) |
+| **Review** | CodeRabbit AI code review with auto-fix |
 | **Test** | Self-healing loop until all tests pass |
 
 The test loop reads the latest `tasks.md` and iterates until all tests pass or max iterations reached.
