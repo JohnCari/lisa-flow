@@ -153,7 +153,7 @@ run_phase() {
     local start=$(date +%s)
     local exit_code=0
 
-    log "${D}[${G}$(progress_bar $num $TOTAL_PHASES)${D}]${N} ${num}/${TOTAL_PHASES} ${W}$name${N}"
+    log "${D}[${G}$(progress_bar $num $TOTAL_PHASES)${D}]${N} ${num}/${TOTAL_PHASES} ${Y}$name${N}"
 
     # Run command, log output, only show on error
     local output
@@ -181,7 +181,7 @@ run_phase 4 "IMPLEMENT" "claude -p --dangerously-skip-permissions \"/speckit.imp
 PHASE="BEAUTIFY"
 START=$(date +%s)
 exit_code=0
-log "${D}[${G}$(progress_bar 5 $TOTAL_PHASES)${D}]${N} 5/${TOTAL_PHASES} ${W}BEAUTIFY${N}"
+log "${D}[${G}$(progress_bar 5 $TOTAL_PHASES)${D}]${N} 5/${TOTAL_PHASES} ${Y}BEAUTIFY${N}"
 
 LATEST_TASKS=$(ls -t specs/*/tasks.md 2>/dev/null | head -1)
 if [ -z "$LATEST_TASKS" ]; then
@@ -206,7 +206,7 @@ log ""
 PHASE="SECURITY"
 START=$(date +%s)
 exit_code=0
-log "${D}[${G}$(progress_bar 6 $TOTAL_PHASES)${D}]${N} 6/${TOTAL_PHASES} ${M}SECURITY${N}"
+log "${D}[${G}$(progress_bar 6 $TOTAL_PHASES)${D}]${N} 6/${TOTAL_PHASES} ${Y}SECURITY${N}"
 
 LATEST_TASKS=$(ls -t specs/*/tasks.md 2>/dev/null | head -1)
 if [ -z "$LATEST_TASKS" ]; then
@@ -230,7 +230,7 @@ log ""
 # TEST phase
 PHASE="TEST"
 START_TEST=$(date +%s)
-log "${D}[${G}$(progress_bar 7 $TOTAL_PHASES)${D}]${N} 7/${TOTAL_PHASES} ${W}TEST${N}"
+log "${D}[${G}$(progress_bar 7 $TOTAL_PHASES)${D}]${N} 7/${TOTAL_PHASES} ${Y}TEST${N}"
 
 LATEST_TASKS=$(ls -t specs/*/tasks.md 2>/dev/null | head -1)
 if [ -z "$LATEST_TASKS" ]; then
