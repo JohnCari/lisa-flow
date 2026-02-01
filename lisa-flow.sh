@@ -35,9 +35,9 @@ check_terminal_width() {
 }
 
 # Phase tracking
-TOTAL_PHASES=7
+TOTAL_PHASES=8
 declare -a PHASE_TIMES=()
-declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "SECURITY" "TEST")
+declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "SECURITY" "REVIEW" "TEST")
 
 # Context7 instructions - phase-specific
 CONTEXT7_FULL="When using any library or framework, use Context7 MCP to get accurate docs: 1) mcp__context7__resolve-library-id with library name. 2) mcp__context7__query-docs with the ID and your specific question."
@@ -226,10 +226,28 @@ PHASE_TIMES[6]=$elapsed
 log "${G}✓${N} SECURITY ${D}($(format_time $elapsed))${N}"
 log ""
 
+# REVIEW phase
+PHASE="REVIEW"
+START=$(date +%s)
+exit_code=0
+log "${D}[${G}$(progress_bar 7 $TOTAL_PHASES)${D}]${N} 7/${TOTAL_PHASES} ${Y}REVIEW${N}"
+
+output=$(claude -p --dangerously-skip-permissions "Read $LATEST_TASKS to understand the feature requirements. Then review all implemented code files. /coderabbit:review Fix any issues found. $CONTEXT7_NONE" 2>&1) || exit_code=$?
+echo "$output" >> "$LOG_FILE"
+if [ "$exit_code" -ne 0 ]; then
+    echo "$output"
+    exit $exit_code
+fi
+
+elapsed=$(($(date +%s) - START))
+PHASE_TIMES[7]=$elapsed
+log "${G}✓${N} REVIEW ${D}($(format_time $elapsed))${N}"
+log ""
+
 # TEST phase
 PHASE="TEST"
 START_TEST=$(date +%s)
-log "${D}[${G}$(progress_bar 7 $TOTAL_PHASES)${D}]${N} 7/${TOTAL_PHASES} ${Y}TEST${N}"
+log "${D}[${G}$(progress_bar 8 $TOTAL_PHASES)${D}]${N} 8/${TOTAL_PHASES} ${Y}TEST${N}"
 
 LATEST_TASKS=$(ls -t specs/*/tasks.md 2>/dev/null | head -1)
 if [ -z "$LATEST_TASKS" ]; then
@@ -248,7 +266,7 @@ while [ $iteration -lt $MAX_TEST_ITERATIONS ]; do
 
     if echo "$RESULT" | grep -q "ALL_TESTS_PASS"; then
         elapsed_test=$(($(date +%s) - START_TEST))
-        PHASE_TIMES[7]=$elapsed_test
+        PHASE_TIMES[8]=$elapsed_test
         elapsed=$(($(date +%s) - START_TOTAL))
         log "${G}✓${N} TEST ${D}($(format_time $elapsed_test))${N}"
         print_summary "success" $elapsed
@@ -262,7 +280,7 @@ done
 echo "$RESULT"
 
 elapsed_test=$(($(date +%s) - START_TEST))
-PHASE_TIMES[7]=$elapsed_test
+PHASE_TIMES[8]=$elapsed_test
 elapsed=$(($(date +%s) - START_TOTAL))
 print_summary "failed" $elapsed
 log "${D}Log: $LOG_FILE${N}"
