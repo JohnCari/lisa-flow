@@ -22,7 +22,6 @@ export TZ
 
 # Colors
 G='\033[0;32m' R='\033[0;31m' Y='\033[1;33m' C='\033[0;36m' W='\033[1;37m' D='\033[2m' N='\033[0m'
-M='\033[0;35m'  # Magenta for SECURITY phase
 O='\033[38;5;202m'  # Orange-red for shadow (Lisa Simpson style)
 
 # Terminal width check
