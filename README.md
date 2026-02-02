@@ -53,7 +53,7 @@ chmod +x lisa-flow/lisa-flow.sh
 ./lisa-flow.sh <feature> [retries]
 ```
 
-- `retries` - Max test attempts (default: 5)
+- `retries` - Max TEST phase iterations until tests pass (default: 5)
 - **Tests are automatically included** - no need to specify "with tests"
 
 ### Input Methods
@@ -90,9 +90,9 @@ SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → REVIEW → TEST
 | **Implement** | Builds the feature |
 | **Beautify** | UI/UX polish on session's frontend files only (maintains design coherence) |
 | **Review** | CodeRabbit reviews session's changed files: quality, performance, security (OWASP) |
-| **Test** | Self-healing loop until all tests pass |
+| **Test** | Self-healing loop: runs tests, fixes failures, repeats until pass or max retries |
 
-The test loop reads the latest `tasks.md` and iterates until all tests pass or max iterations reached.
+The TEST phase iterates until all tests pass or max retries reached. Each iteration runs tests and fixes implementation code (never modifies tests).
 
 ## Inspiration
 
