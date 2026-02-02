@@ -169,7 +169,6 @@ TASKS_FILE=$(find_tasks_file)
 [ -z "$TASKS_FILE" ] && { log "${R}✗ No tasks.md found after TASKS phase${N}"; exit 1; }
 printf '%s\n' "Using tasks file: $TASKS_FILE" >> "$LOG_FILE"
 
-PROMPT_REVIEW="Read $TASKS_FILE. Use Task tool to spawn coderabbit:code-reviewer agent for code review covering: 1) Code quality/bugs 2) Performance 3) Security (OWASP). Apply all fixes."
 PROMPT_TEST="Read $TASKS_FILE. Run all tests. Fix failures in implementation (don't modify tests). Output ALL_TESTS_PASS when done or TESTS_FAILED if stuck. $CONTEXT7"
 
 run_phase 4 "IMPLEMENT" claude -p --dangerously-skip-permissions "$PROMPT_IMPLEMENT"
@@ -192,7 +191,21 @@ else
     log ""
 fi
 
-run_phase 6 "REVIEW" claude -p --dangerously-skip-permissions "$PROMPT_REVIEW"
+# REVIEW - only session's changed files
+if [ -n "$START_COMMIT" ]; then
+    CHANGED_FILES=$(git diff --name-only "$START_COMMIT" 2>/dev/null | tr '\n' ' ')
+else
+    CHANGED_FILES=""
+fi
+
+if [ -n "$CHANGED_FILES" ]; then
+    PROMPT_REVIEW="Use Task tool to spawn coderabbit:code-reviewer agent to review ONLY these files: $CHANGED_FILES
+Review must cover: 1) Code quality/bugs 2) Performance 3) Security (OWASP). Apply all fixes."
+    run_phase 6 "REVIEW" claude -p --dangerously-skip-permissions "$PROMPT_REVIEW"
+else
+    log "${D}○${N} REVIEW ${D}(skipped - no files changed)${N}"
+    log ""
+fi
 
 # TEST - Self-healing loop
 PHASE="TEST"
