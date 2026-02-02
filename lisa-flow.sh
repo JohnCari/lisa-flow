@@ -276,7 +276,7 @@ START=$SECONDS
 local_exit_code=0
 log "${D}[${G}$(progress_bar 7 "$TOTAL_PHASES")${D}]${N} 7/${TOTAL_PHASES} ${Y}REVIEW${N}"
 
-output=$(claude -p --dangerously-skip-permissions "Read $TASKS_FILE to understand the feature requirements. Then review all implemented code files. /coderabbit:review Fix any issues found. $CONTEXT7_NONE" 2>&1) || local_exit_code=$?
+output=$(claude -p --dangerously-skip-permissions "Read $TASKS_FILE to understand the feature requirements. Then use the Task tool to spawn a coderabbit:code-reviewer agent to perform a thorough code review of all implemented files. Apply any fixes recommended by the review. $CONTEXT7_NONE" 2>&1) || local_exit_code=$?
 echo "$output" >> "$LOG_FILE"
 if [ "$local_exit_code" -ne 0 ]; then
     echo "$output"
