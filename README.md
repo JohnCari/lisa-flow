@@ -7,6 +7,7 @@ Combines [GitHub Spec Kit](https://github.com/github/spec-kit) phases with a [Ra
 ## Requirements
 
 ### Tools
+- **Bash 4.0+** (for array features)
 - [Claude Code](https://github.com/anthropics/claude-code)
 - [GitHub CLI](https://cli.github.com/) (gh)
 
@@ -89,9 +90,20 @@ The test loop reads the latest `tasks.md` and iterates until all tests pass or m
 
 > *"Trust the AI to self-identify, self-correct, and self-improve."* — Geoffrey Huntley
 
+## Features
+
+- **Input validation** - Validates test_retries is a positive integer
+- **Safe command execution** - No `eval`, uses array-based execution to prevent command injection
+- **ISO 8601 log timestamps** - Sortable log filenames (`YYYY-MM-DD_HH-MM-SS`)
+- **Improved error handling** - ERR trap includes line numbers and logs to file
+- **Progress visualization** - Unicode progress bar and phase timing summary
+- **SECONDS builtin** - Efficient timing without subshells
+
 ## Security
 
-Uses `--dangerously-skip-permissions`. Use in trusted environments only.
+Uses `--dangerously-skip-permissions` for automation. Use in trusted environments only.
+
+The script validates inputs and uses safe command execution patterns to prevent injection attacks.
 
 ## License
 
