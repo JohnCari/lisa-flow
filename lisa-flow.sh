@@ -29,7 +29,7 @@ for arg in "$@"; do
     esac
 done
 
-FEATURE="${1:-}"
+FEATURE_INPUT="${1:-}"
 MAX_TEST_ITERATIONS="${2:-5}"
 
 # Colors (disabled with --no-color or NO_COLOR env var)
@@ -40,8 +40,8 @@ else
     O='\033[38;5;202m'  # Orange-red for shadow (Lisa Simpson style)
 fi
 
-# Validate FEATURE is provided
-if [ -z "$FEATURE" ]; then
+# Validate FEATURE_INPUT is provided
+if [ -z "$FEATURE_INPUT" ]; then
     echo ""
     if [[ -z "$G" ]]; then
         # No color version
@@ -62,18 +62,43 @@ if [ -z "$FEATURE" ]; then
     echo ""
     echo -e "  Usage: ./lisa-flow.sh ${Y}<feature>${N} ${D}[test_retries]${N} ${D}[--no-color]${N}"
     echo ""
-    echo -e "  ${W}<feature>${N}        Feature description"
+    echo -e "  ${W}<feature>${N}        Feature description (text, @file, or path)"
+    echo -e "                   ${D}\"Build auth API\"${N}  - inline text"
+    echo -e "                   ${D}@spec.md${N}          - read from file"
+    echo -e "                   ${D}./specs/auth.md${N}   - auto-detect file"
     echo -e "  ${D}[test_retries]${N}   Max test attempts ${D}(default: 5)${N}"
     echo -e "  ${D}[--no-color]${N}     Disable colored output"
     echo ""
     exit 1
 fi
 
-# Validate FEATURE - reject potentially dangerous characters
-if [[ "$FEATURE" =~ [\;\|\&\$\`\\] ]]; then
-    echo "Error: Feature description contains invalid characters (; | & \$ \` \\)"
-    exit 1
-fi
+# Resolve feature input - handles @file, path, or inline text
+resolve_feature_input() {
+    local input="$1"
+
+    # @ syntax: @path/to/file
+    if [[ "$input" == @* ]]; then
+        local file="${input:1}"  # Remove @ prefix
+        if [[ ! -f "$file" ]]; then
+            echo "Error: File not found: $file" >&2
+            return 1
+        fi
+        cat "$file"
+        return 0
+    fi
+
+    # Auto-detect file path (if file exists)
+    if [[ -f "$input" ]]; then
+        cat "$input"
+        return 0
+    fi
+
+    # Inline text (default)
+    printf '%s' "$input"
+}
+
+# Resolve FEATURE from input (text, @file, or path)
+FEATURE=$(resolve_feature_input "$FEATURE_INPUT") || exit 1
 
 # Validate MAX_TEST_ITERATIONS is a positive integer
 if ! [[ "$MAX_TEST_ITERATIONS" =~ ^[1-9][0-9]*$ ]]; then

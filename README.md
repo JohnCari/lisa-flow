@@ -50,16 +50,33 @@ chmod +x lisa-flow/lisa-flow.sh
 ## Usage
 
 ```bash
-./lisa-flow.sh "feature description" [max_test_iterations]
+./lisa-flow.sh <feature> [max_test_iterations] [--no-color]
 ```
 
 **Tests are automatically included** - no need to specify "with tests".
 
+### Input Methods
+
+| Method | Example | Description |
+|--------|---------|-------------|
+| Inline text | `"Build auth API"` | Direct feature description |
+| @file | `@spec.md` | Read from file (@ prefix) |
+| File path | `./specs/auth.md` | Auto-detect if file exists |
+
 ### Examples
 
 ```bash
+# Inline text
 ./lisa-flow.sh "Build user auth API"
-./lisa-flow.sh "Implement shopping cart" 10
+
+# Read from file
+./lisa-flow.sh @specs/my-feature.md
+
+# Auto-detect file path
+./lisa-flow.sh ./specs/shopping-cart.md
+
+# With options
+./lisa-flow.sh "Implement shopping cart" 10 --no-color
 ```
 
 ## How It Works
@@ -91,7 +108,7 @@ The test loop reads the latest `tasks.md` and iterates until all tests pass or m
 
 ## Features
 
-- **Input validation** - Validates test_retries is a positive integer
+- **Flexible input** - Accepts inline text, @file syntax, or auto-detected file paths
 - **Safe command execution** - No `eval`, uses array-based execution to prevent command injection
 - **ISO 8601 log timestamps** - Sortable log filenames (`YYYY-MM-DD_HH-MM-SS`)
 - **Improved error handling** - ERR trap includes line numbers and logs to file
