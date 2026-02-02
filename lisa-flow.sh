@@ -8,28 +8,29 @@ readonly MAX_FEATURE_LEN=50
 readonly MAX_LOG_LEN=40
 readonly PROGRESS_BAR_WIDTH=30
 readonly LOG_RETENTION_DAYS=7
+readonly SPEC_DIR_REL="../specs"  # Relative to script directory
 
 FEATURE_INPUT="${1:-}"
 MAX_TEST_ITERATIONS="${2:-5}"
 
 # Colors
-G='\033[0;32m' R='\033[0;31m' Y='\033[1;33m' C='\033[0;36m' W='\033[1;37m' D='\033[2m' N='\033[0m'
-O='\033[38;5;202m'
+GREEN='\033[0;32m' RED='\033[0;31m' YELLOW='\033[1;33m' CYAN='\033[0;36m' WHITE='\033[1;37m' DIM='\033[2m' RESET='\033[0m'
+ORANGE='\033[38;5;202m'
 
 show_banner() {
     echo ""
-    echo -e "${Y}██${O}╗     ${Y}██${O}╗${Y}███████${O}╗ ${Y}█████${O}╗       ${Y}███████${O}╗${Y}██${O}╗      ${Y}██████${O}╗ ${Y}██${O}╗    ${Y}██${O}╗${N}"
-    echo -e "${Y}██${O}║     ${Y}██${O}║${Y}██${O}╔════╝${Y}██${O}╔══${Y}██${O}╗      ${Y}██${O}╔════╝${Y}██${O}║     ${Y}██${O}╔═══${Y}██${O}╗${Y}██${O}║    ${Y}██${O}║${N}"
-    echo -e "${Y}██${O}║     ${Y}██${O}║${Y}███████${O}╗${Y}███████${O}║${W}█████${O}╗${Y}█████${O}╗  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║ ${Y}█${O}╗ ${Y}██${O}║${N}"
-    echo -e "${Y}██${O}║     ${Y}██${O}║╚════${Y}██${O}║${Y}██${O}╔══${Y}██${O}║╚════╝${Y}██${O}╔══╝  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║${Y}███${O}╗${Y}██${O}║${N}"
-    echo -e "${Y}███████${O}╗${Y}██${O}║${Y}███████${O}║${Y}██${O}║  ${Y}██${O}║      ${Y}██${O}║     ${Y}███████${O}╗╚${Y}██████${O}╔╝╚${Y}███${O}╔${Y}███${O}╔╝${N}"
-    echo -e "${O}╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝${N}"
+    echo -e "${YELLOW}██${ORANGE}╗     ${YELLOW}██${ORANGE}╗${YELLOW}███████${ORANGE}╗ ${YELLOW}█████${ORANGE}╗       ${YELLOW}███████${ORANGE}╗${YELLOW}██${ORANGE}╗      ${YELLOW}██████${ORANGE}╗ ${YELLOW}██${ORANGE}╗    ${YELLOW}██${ORANGE}╗${RESET}"
+    echo -e "${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}╔════╝${YELLOW}██${ORANGE}╔══${YELLOW}██${ORANGE}╗      ${YELLOW}██${ORANGE}╔════╝${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}╔═══${YELLOW}██${ORANGE}╗${YELLOW}██${ORANGE}║    ${YELLOW}██${ORANGE}║${RESET}"
+    echo -e "${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║${YELLOW}███████${ORANGE}╗${YELLOW}███████${ORANGE}║${WHITE}█████${ORANGE}╗${YELLOW}█████${ORANGE}╗  ${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║   ${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}║ ${YELLOW}█${ORANGE}╗ ${YELLOW}██${ORANGE}║${RESET}"
+    echo -e "${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║╚════${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}╔══${YELLOW}██${ORANGE}║╚════╝${YELLOW}██${ORANGE}╔══╝  ${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║   ${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}║${YELLOW}███${ORANGE}╗${YELLOW}██${ORANGE}║${RESET}"
+    echo -e "${YELLOW}███████${ORANGE}╗${YELLOW}██${ORANGE}║${YELLOW}███████${ORANGE}║${YELLOW}██${ORANGE}║  ${YELLOW}██${ORANGE}║      ${YELLOW}██${ORANGE}║     ${YELLOW}███████${ORANGE}╗╚${YELLOW}██████${ORANGE}╔╝╚${YELLOW}███${ORANGE}╔${YELLOW}███${ORANGE}╔╝${RESET}"
+    echo -e "${ORANGE}╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝${RESET}"
     echo ""
 }
 
 if [ -z "$FEATURE_INPUT" ]; then
     show_banner
-    echo -e "  Usage: ./lisa-flow.sh ${Y}<feature>${N} ${D}[retries]${N}"
+    echo -e "  Usage: ./lisa-flow.sh ${YELLOW}<feature>${RESET} ${DIM}[retries]${RESET}"
     echo -e "         feature: text or @file"
     echo ""
     exit 1
@@ -70,9 +71,9 @@ declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "REVIEW"
 CONTEXT7="When using any library or framework, use Context7 MCP to get accurate docs: 1) mcp__context7__resolve-library-id with library name. 2) mcp__context7__query-docs with the ID and your specific question."
 
 PHASE="INIT"
-error_handler() { echo -e "\n${R}✗ Failed at: $PHASE (line $1)${N}\n" | tee -a "$LOG_FILE"; }
+error_handler() { echo -e "\n${RED}✗ Failed at: $PHASE (line $1)${RESET}\n" | tee -a "$LOG_FILE"; }
 trap 'error_handler $LINENO' ERR
-trap 'echo -e "\n${Y}Interrupted${N}\n"; exit 130' INT
+trap 'echo -e "\n${YELLOW}Interrupted${RESET}\n"; exit 130' INT
 
 log() { echo -e "$1" | tee -a "$LOG_FILE"; }
 
@@ -94,18 +95,18 @@ progress_bar() {
 print_summary() {
     local status="$1" total_time="$2"
     log ""
-    log "${D}─────────────────────────────────────────────${N}"
+    log "${DIM}─────────────────────────────────────────────${RESET}"
     log ""
     for i in "${!PHASE_NAMES[@]}"; do
         local idx=$((i + 1)) name="${PHASE_NAMES[$i]}" time="${PHASE_TIMES[$idx]:-}"
-        local icon="${G}✓${N}" time_str=""
-        if [ -n "$time" ]; then time_str="$(format_time "$time")"; else icon="${D}○${N}"; time_str="-"; fi
+        local icon="${GREEN}✓${RESET}" time_str=""
+        if [ -n "$time" ]; then time_str="$(format_time "$time")"; else icon="${DIM}○${RESET}"; time_str="-"; fi
         log "  $icon $(printf '%-12s' "$name") $(printf '%10s' "$time_str")"
     done
     log ""
-    log "${D}─────────────────────────────────────────────${N}"
-    if [ "$status" = "success" ]; then log "  ${G}SUCCESS${N}  Total: $(format_time "$total_time")"
-    else log "  ${R}FAILED${N}   Total: $(format_time "$total_time")"; fi
+    log "${DIM}─────────────────────────────────────────────${RESET}"
+    if [ "$status" = "success" ]; then log "  ${GREEN}SUCCESS${RESET}  Total: $(format_time "$total_time")"
+    else log "  ${RED}FAILED${RESET}   Total: $(format_time "$total_time")"; fi
     log ""
 }
 
@@ -114,19 +115,19 @@ run_phase() {
     local -a cmd=("$@")
     PHASE="$name"
     local start=$SECONDS exit_code=0
-    log "${D}[${G}$(progress_bar "$num" "$TOTAL_PHASES")${D}]${N} ${num}/${TOTAL_PHASES} ${Y}$name${N}"
+    log "${DIM}[${GREEN}$(progress_bar "$num" "$TOTAL_PHASES")${DIM}]${RESET} ${num}/${TOTAL_PHASES} ${YELLOW}$name${RESET}"
     local output
     output=$("${cmd[@]}" 2>&1) || exit_code=$?
     printf '%s\n' "$output" >> "$LOG_FILE"
     if [ "$exit_code" -ne 0 ]; then printf '%s\n' "$output"; return "$exit_code"; fi
     local elapsed=$((SECONDS - start))
     PHASE_TIMES[$num]=$elapsed
-    log "${G}✓${N} $name ${D}($(format_time "$elapsed"))${N}"
+    log "${GREEN}✓${RESET} $name ${DIM}($(format_time "$elapsed"))${RESET}"
     log ""
 }
 
 find_tasks_file() {
-    local spec_dir="${SCRIPT_DIR}/../specs"
+    local spec_dir="${SCRIPT_DIR}/${SPEC_DIR_REL}"
     shopt -s nullglob
     local -a tasks_files=("$spec_dir"/*/tasks.md)
     shopt -u nullglob
@@ -156,9 +157,9 @@ display_feature="$FEATURE"
 display_log="$LOG_FILE"
 [ "${#LOG_FILE}" -gt "$MAX_LOG_LEN" ] && display_log="...${LOG_FILE: -$MAX_LOG_LEN}"
 
-log "  Feature        ${W}$display_feature${N}"
-log "  Test Retries   ${W}$MAX_TEST_ITERATIONS${N}"
-log "  Log            ${D}$display_log${N}"
+log "  Feature        ${WHITE}$display_feature${RESET}"
+log "  Test Retries   ${WHITE}$MAX_TEST_ITERATIONS${RESET}"
+log "  Log            ${DIM}$display_log${RESET}"
 log ""
 
 run_phase 1 "SPECIFY" claude -p --dangerously-skip-permissions "$PROMPT_SPECIFY"
@@ -166,7 +167,7 @@ run_phase 2 "PLAN" claude -p --dangerously-skip-permissions "$PROMPT_PLAN"
 run_phase 3 "TASKS" claude -p --dangerously-skip-permissions "$PROMPT_TASKS"
 
 TASKS_FILE=$(find_tasks_file)
-[ -z "$TASKS_FILE" ] && { log "${R}✗ No tasks.md found after TASKS phase${N}"; exit 1; }
+[ -z "$TASKS_FILE" ] && { log "${RED}✗ No tasks.md found after TASKS phase${RESET}"; exit 1; }
 printf '%s\n' "Using tasks file: $TASKS_FILE" >> "$LOG_FILE"
 
 PROMPT_TEST="Read $TASKS_FILE. Run all tests. Fix failures in implementation (don't modify tests). Output ALL_TESTS_PASS when done or TESTS_FAILED if stuck. $CONTEXT7"
@@ -174,9 +175,9 @@ PROMPT_TEST="Read $TASKS_FILE. Run all tests. Fix failures in implementation (do
 run_phase 4 "IMPLEMENT" claude -p --dangerously-skip-permissions "$PROMPT_IMPLEMENT"
 
 # BEAUTIFY - only session's frontend files, but maintain design coherence
-FRONTEND_PATTERNS="*.tsx *.jsx *.ts *.js *.css *.html"
+FRONTEND_PATTERNS=("*.tsx" "*.jsx" "*.ts" "*.js" "*.css" "*.html")
 if [ -n "$START_COMMIT" ]; then
-    CHANGED_FRONTEND=$(git diff --name-only "$START_COMMIT" -- $FRONTEND_PATTERNS 2>/dev/null | tr '\n' ' ')
+    CHANGED_FRONTEND=$(git diff --name-only "$START_COMMIT" -- "${FRONTEND_PATTERNS[@]}" 2>/dev/null | tr '\n' ' ')
 else
     CHANGED_FRONTEND=""
 fi
@@ -187,7 +188,7 @@ But FIRST review existing app design (components, styles, tailwind config) to en
 Improve UI/UX: visual consistency with existing design, accessibility, HCI, layouts, spacing, typography, interactions. $CONTEXT7"
     run_phase 5 "BEAUTIFY" claude -p --dangerously-skip-permissions "$PROMPT_BEAUTIFY"
 else
-    log "${D}○${N} BEAUTIFY ${D}(skipped - no frontend files)${N}"
+    log "${DIM}○${RESET} BEAUTIFY ${DIM}(skipped - no frontend files)${RESET}"
     log ""
 fi
 
@@ -203,29 +204,29 @@ if [ -n "$CHANGED_FILES" ]; then
 Review must cover: 1) Code quality/bugs 2) Performance 3) Security (OWASP). Apply all fixes."
     run_phase 6 "REVIEW" claude -p --dangerously-skip-permissions "$PROMPT_REVIEW"
 else
-    log "${D}○${N} REVIEW ${D}(skipped - no files changed)${N}"
+    log "${DIM}○${RESET} REVIEW ${DIM}(skipped - no files changed)${RESET}"
     log ""
 fi
 
 # TEST - Self-healing loop
 PHASE="TEST"
 START_TEST=$SECONDS
-log "${D}[${G}$(progress_bar 7 "$TOTAL_PHASES")${D}]${N} 7/${TOTAL_PHASES} ${Y}TEST${N}"
+log "${DIM}[${GREEN}$(progress_bar $TOTAL_PHASES "$TOTAL_PHASES")${DIM}]${RESET} ${TOTAL_PHASES}/${TOTAL_PHASES} ${YELLOW}TEST${RESET}"
 
 iteration=0
 RESULT=""
 while [ "$iteration" -lt "$MAX_TEST_ITERATIONS" ]; do
     iteration=$((iteration + 1))
-    log "  ${C}↻${N} Attempt $iteration/$MAX_TEST_ITERATIONS"
+    log "  ${CYAN}↻${RESET} Attempt $iteration/$MAX_TEST_ITERATIONS"
     RESULT=$(claude -p --dangerously-skip-permissions "$PROMPT_TEST" 2>&1)
     printf '%s\n' "$RESULT" >> "$LOG_FILE"
     if printf '%s' "$RESULT" | grep -q "ALL_TESTS_PASS"; then
         elapsed_test=$((SECONDS - START_TEST))
-        PHASE_TIMES[7]=$elapsed_test
+        PHASE_TIMES[$TOTAL_PHASES]=$elapsed_test
         elapsed=$((SECONDS - START_TOTAL))
-        log "${G}✓${N} TEST ${D}($(format_time "$elapsed_test"))${N}"
+        log "${GREEN}✓${RESET} TEST ${DIM}($(format_time "$elapsed_test"))${RESET}"
         print_summary "success" "$elapsed"
-        log "${D}Log: $LOG_FILE${N}"
+        log "${DIM}Log: $LOG_FILE${RESET}"
         log ""
         exit 0
     fi
@@ -233,9 +234,9 @@ done
 
 printf '%s\n' "$RESULT"
 elapsed_test=$((SECONDS - START_TEST))
-PHASE_TIMES[7]=$elapsed_test
+PHASE_TIMES[$TOTAL_PHASES]=$elapsed_test
 elapsed=$((SECONDS - START_TOTAL))
 print_summary "failed" "$elapsed"
-log "${D}Log: $LOG_FILE${N}"
+log "${DIM}Log: $LOG_FILE${RESET}"
 log ""
 exit 1
