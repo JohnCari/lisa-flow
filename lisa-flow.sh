@@ -60,6 +60,9 @@ find "$LOG_DIR" -name "lisa-flow_*.log" -type f -mtime +"$LOG_RETENTION_DAYS" -d
 TZ="${TZ:-America/New_York}"
 export TZ
 
+# Capture git state for scoped BEAUTIFY
+START_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
+
 TOTAL_PHASES=7
 declare -a PHASE_TIMES=()
 declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "REVIEW" "TEST")
@@ -166,12 +169,29 @@ TASKS_FILE=$(find_tasks_file)
 [ -z "$TASKS_FILE" ] && { log "${R}✗ No tasks.md found after TASKS phase${N}"; exit 1; }
 printf '%s\n' "Using tasks file: $TASKS_FILE" >> "$LOG_FILE"
 
-PROMPT_BEAUTIFY="/frontend-design:frontend-design Read $TASKS_FILE. Improve UI/UX: visual consistency, accessibility, HCI, layouts, spacing, typography, interactions. $CONTEXT7"
 PROMPT_REVIEW="Read $TASKS_FILE. Use Task tool to spawn coderabbit:code-reviewer agent for code review covering: 1) Code quality/bugs 2) Performance 3) Security (OWASP). Apply all fixes."
 PROMPT_TEST="Read $TASKS_FILE. Run all tests. Fix failures in implementation (don't modify tests). Output ALL_TESTS_PASS when done or TESTS_FAILED if stuck. $CONTEXT7"
 
 run_phase 4 "IMPLEMENT" claude -p --dangerously-skip-permissions "$PROMPT_IMPLEMENT"
-run_phase 5 "BEAUTIFY" claude -p --dangerously-skip-permissions "$PROMPT_BEAUTIFY"
+
+# BEAUTIFY - only session's frontend files, but maintain design coherence
+FRONTEND_PATTERNS="*.tsx *.jsx *.ts *.js *.css *.html"
+if [ -n "$START_COMMIT" ]; then
+    CHANGED_FRONTEND=$(git diff --name-only "$START_COMMIT" -- $FRONTEND_PATTERNS 2>/dev/null | tr '\n' ' ')
+else
+    CHANGED_FRONTEND=""
+fi
+
+if [ -n "$CHANGED_FRONTEND" ]; then
+    PROMPT_BEAUTIFY="/frontend-design:frontend-design MODIFY ONLY these files: $CHANGED_FRONTEND
+But FIRST review existing app design (components, styles, tailwind config) to ensure coherence.
+Improve UI/UX: visual consistency with existing design, accessibility, HCI, layouts, spacing, typography, interactions. $CONTEXT7"
+    run_phase 5 "BEAUTIFY" claude -p --dangerously-skip-permissions "$PROMPT_BEAUTIFY"
+else
+    log "${D}○${N} BEAUTIFY ${D}(skipped - no frontend files)${N}"
+    log ""
+fi
+
 run_phase 6 "REVIEW" claude -p --dangerously-skip-permissions "$PROMPT_REVIEW"
 
 # TEST - Self-healing loop
