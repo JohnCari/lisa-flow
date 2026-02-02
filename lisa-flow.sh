@@ -19,25 +19,52 @@ readonly MIN_WIDTH=75
 readonly MAX_FEATURE_LEN=50
 readonly MAX_LOG_LEN=40
 readonly PROGRESS_BAR_WIDTH=30
+readonly LOG_RETENTION_DAYS=7
+
+# Parse flags
+NO_COLOR=false
+for arg in "$@"; do
+    case "$arg" in
+        --no-color) NO_COLOR=true; shift ;;
+    esac
+done
 
 FEATURE="${1:-}"
 MAX_TEST_ITERATIONS="${2:-5}"
 
+# Colors (disabled with --no-color or NO_COLOR env var)
+if [[ "$NO_COLOR" == "true" ]] || [[ "${NO_COLOR:-}" == "1" ]] || [[ ! -t 1 ]]; then
+    G='' R='' Y='' C='' W='' D='' N='' O=''
+else
+    G='\033[0;32m' R='\033[0;31m' Y='\033[1;33m' C='\033[0;36m' W='\033[1;37m' D='\033[2m' N='\033[0m'
+    O='\033[38;5;202m'  # Orange-red for shadow (Lisa Simpson style)
+fi
+
 # Validate FEATURE is provided
 if [ -z "$FEATURE" ]; then
-    # Show usage (defined later, so we inline here)
     echo ""
-    echo -e "\033[1;33m██\033[38;5;202m╗     \033[1;33m██\033[38;5;202m╗\033[1;33m███████\033[38;5;202m╗ \033[1;33m█████\033[38;5;202m╗       \033[1;33m███████\033[38;5;202m╗\033[1;33m██\033[38;5;202m╗      \033[1;33m██████\033[38;5;202m╗ \033[1;33m██\033[38;5;202m╗    \033[1;33m██\033[38;5;202m╗\033[0m"
-    echo -e "\033[1;33m██\033[38;5;202m║     \033[1;33m██\033[38;5;202m║\033[1;33m██\033[38;5;202m╔════╝\033[1;33m██\033[38;5;202m╔══\033[1;33m██\033[38;5;202m╗      \033[1;33m██\033[38;5;202m╔════╝\033[1;33m██\033[38;5;202m║     \033[1;33m██\033[38;5;202m╔═══\033[1;33m██\033[38;5;202m╗\033[1;33m██\033[38;5;202m║    \033[1;33m██\033[38;5;202m║\033[0m"
-    echo -e "\033[1;33m██\033[38;5;202m║     \033[1;33m██\033[38;5;202m║\033[1;33m███████\033[38;5;202m╗\033[1;33m███████\033[38;5;202m║\033[1;37m█████\033[38;5;202m╗\033[1;33m█████\033[38;5;202m╗  \033[1;33m██\033[38;5;202m║     \033[1;33m██\033[38;5;202m║   \033[1;33m██\033[38;5;202m║\033[1;33m██\033[38;5;202m║ \033[1;33m█\033[38;5;202m╗ \033[1;33m██\033[38;5;202m║\033[0m"
-    echo -e "\033[1;33m██\033[38;5;202m║     \033[1;33m██\033[38;5;202m║╚════\033[1;33m██\033[38;5;202m║\033[1;33m██\033[38;5;202m╔══\033[1;33m██\033[38;5;202m║╚════╝\033[1;33m██\033[38;5;202m╔══╝  \033[1;33m██\033[38;5;202m║     \033[1;33m██\033[38;5;202m║   \033[1;33m██\033[38;5;202m║\033[1;33m██\033[38;5;202m║\033[1;33m███\033[38;5;202m╗\033[1;33m██\033[38;5;202m║\033[0m"
-    echo -e "\033[1;33m███████\033[38;5;202m╗\033[1;33m██\033[38;5;202m║\033[1;33m███████\033[38;5;202m║\033[1;33m██\033[38;5;202m║  \033[1;33m██\033[38;5;202m║      \033[1;33m██\033[38;5;202m║     \033[1;33m███████\033[38;5;202m╗╚\033[1;33m██████\033[38;5;202m╔╝╚\033[1;33m███\033[38;5;202m╔\033[1;33m███\033[38;5;202m╔╝\033[0m"
-    echo -e "\033[38;5;202m╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝\033[0m"
+    if [[ -z "$G" ]]; then
+        # No color version
+        echo "██╗     ██╗███████╗ █████╗       ███████╗██╗      ██████╗ ██╗    ██╗"
+        echo "██║     ██║██╔════╝██╔══██╗      ██╔════╝██║     ██╔═══██╗██║    ██║"
+        echo "██║     ██║███████╗███████║█████╗█████╗  ██║     ██║   ██║██║ █╗ ██║"
+        echo "██║     ██║╚════██║██╔══██║╚════╝██╔══╝  ██║     ██║   ██║██║███╗██║"
+        echo "███████╗██║███████║██║  ██║      ██║     ███████╗╚██████╔╝╚███╔███╔╝"
+        echo "╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝"
+    else
+        echo -e "${Y}██${O}╗     ${Y}██${O}╗${Y}███████${O}╗ ${Y}█████${O}╗       ${Y}███████${O}╗${Y}██${O}╗      ${Y}██████${O}╗ ${Y}██${O}╗    ${Y}██${O}╗${N}"
+        echo -e "${Y}██${O}║     ${Y}██${O}║${Y}██${O}╔════╝${Y}██${O}╔══${Y}██${O}╗      ${Y}██${O}╔════╝${Y}██${O}║     ${Y}██${O}╔═══${Y}██${O}╗${Y}██${O}║    ${Y}██${O}║${N}"
+        echo -e "${Y}██${O}║     ${Y}██${O}║${Y}███████${O}╗${Y}███████${O}║${W}█████${O}╗${Y}█████${O}╗  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║ ${Y}█${O}╗ ${Y}██${O}║${N}"
+        echo -e "${Y}██${O}║     ${Y}██${O}║╚════${Y}██${O}║${Y}██${O}╔══${Y}██${O}║╚════╝${Y}██${O}╔══╝  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║${Y}███${O}╗${Y}██${O}║${N}"
+        echo -e "${Y}███████${O}╗${Y}██${O}║${Y}███████${O}║${Y}██${O}║  ${Y}██${O}║      ${Y}██${O}║     ${Y}███████${O}╗╚${Y}██████${O}╔╝╚${Y}███${O}╔${Y}███${O}╔╝${N}"
+        echo -e "${O}╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝${N}"
+    fi
     echo ""
-    echo -e "  Usage: ./lisa-flow.sh \033[1;33m<feature>\033[0m \033[2m[test_retries]\033[0m"
+    echo -e "  Usage: ./lisa-flow.sh ${Y}<feature>${N} ${D}[test_retries]${N} ${D}[--no-color]${N}"
     echo ""
-    echo -e "  \033[1;37m<feature>\033[0m        Feature description"
-    echo -e "  \033[2m[test_retries]\033[0m   Max test attempts \033[2m(default: 5)\033[0m"
+    echo -e "  ${W}<feature>${N}        Feature description"
+    echo -e "  ${D}[test_retries]${N}   Max test attempts ${D}(default: 5)${N}"
+    echo -e "  ${D}[--no-color]${N}     Disable colored output"
     echo ""
     exit 1
 fi
@@ -61,13 +88,20 @@ umask 077
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/lisa-flow_$(date +%Y-%m-%d_%H-%M-%S).log"
 
+# Log rotation - delete logs older than LOG_RETENTION_DAYS
+find "$LOG_DIR" -name "lisa-flow_*.log" -type f -mtime +"$LOG_RETENTION_DAYS" -delete 2>/dev/null || true
+
 # Timezone (change to your timezone)
 TZ="${TZ:-America/New_York}"
 export TZ
 
-# Colors
-G='\033[0;32m' R='\033[0;31m' Y='\033[1;33m' C='\033[0;36m' W='\033[1;37m' D='\033[2m' N='\033[0m'
-O='\033[38;5;202m'  # Orange-red for shadow (Lisa Simpson style)
+# Cleanup trap - ensure clean exit
+cleanup() {
+    local exit_code=$?
+    # Add any cleanup tasks here (temp files, etc.)
+    exit $exit_code
+}
+trap cleanup EXIT
 
 # Terminal width check
 check_terminal_width() {
@@ -84,7 +118,7 @@ TOTAL_PHASES=7
 declare -a PHASE_TIMES=()
 declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "REVIEW" "TEST")
 
-# Context7 instructions - phase-specific
+# Context7 instructions
 CONTEXT7_FULL="When using any library or framework, use Context7 MCP to get accurate docs: 1) mcp__context7__resolve-library-id with library name. 2) mcp__context7__query-docs with the ID and your specific question."
 CONTEXT7_NONE=""
 
@@ -151,12 +185,21 @@ print_summary() {
 
 show_banner() {
     echo ""
-    echo -e "${Y}██${O}╗     ${Y}██${O}╗${Y}███████${O}╗ ${Y}█████${O}╗       ${Y}███████${O}╗${Y}██${O}╗      ${Y}██████${O}╗ ${Y}██${O}╗    ${Y}██${O}╗${N}"
-    echo -e "${Y}██${O}║     ${Y}██${O}║${Y}██${O}╔════╝${Y}██${O}╔══${Y}██${O}╗      ${Y}██${O}╔════╝${Y}██${O}║     ${Y}██${O}╔═══${Y}██${O}╗${Y}██${O}║    ${Y}██${O}║${N}"
-    echo -e "${Y}██${O}║     ${Y}██${O}║${Y}███████${O}╗${Y}███████${O}║${W}█████${O}╗${Y}█████${O}╗  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║ ${Y}█${O}╗ ${Y}██${O}║${N}"
-    echo -e "${Y}██${O}║     ${Y}██${O}║╚════${Y}██${O}║${Y}██${O}╔══${Y}██${O}║╚════╝${Y}██${O}╔══╝  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║${Y}███${O}╗${Y}██${O}║${N}"
-    echo -e "${Y}███████${O}╗${Y}██${O}║${Y}███████${O}║${Y}██${O}║  ${Y}██${O}║      ${Y}██${O}║     ${Y}███████${O}╗╚${Y}██████${O}╔╝╚${Y}███${O}╔${Y}███${O}╔╝${N}"
-    echo -e "${O}╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝${N}"
+    if [[ -z "$G" ]]; then
+        echo "██╗     ██╗███████╗ █████╗       ███████╗██╗      ██████╗ ██╗    ██╗"
+        echo "██║     ██║██╔════╝██╔══██╗      ██╔════╝██║     ██╔═══██╗██║    ██║"
+        echo "██║     ██║███████╗███████║█████╗█████╗  ██║     ██║   ██║██║ █╗ ██║"
+        echo "██║     ██║╚════██║██╔══██║╚════╝██╔══╝  ██║     ██║   ██║██║███╗██║"
+        echo "███████╗██║███████║██║  ██║      ██║     ███████╗╚██████╔╝╚███╔███╔╝"
+        echo "╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝"
+    else
+        echo -e "${Y}██${O}╗     ${Y}██${O}╗${Y}███████${O}╗ ${Y}█████${O}╗       ${Y}███████${O}╗${Y}██${O}╗      ${Y}██████${O}╗ ${Y}██${O}╗    ${Y}██${O}╗${N}"
+        echo -e "${Y}██${O}║     ${Y}██${O}║${Y}██${O}╔════╝${Y}██${O}╔══${Y}██${O}╗      ${Y}██${O}╔════╝${Y}██${O}║     ${Y}██${O}╔═══${Y}██${O}╗${Y}██${O}║    ${Y}██${O}║${N}"
+        echo -e "${Y}██${O}║     ${Y}██${O}║${Y}███████${O}╗${Y}███████${O}║${W}█████${O}╗${Y}█████${O}╗  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║ ${Y}█${O}╗ ${Y}██${O}║${N}"
+        echo -e "${Y}██${O}║     ${Y}██${O}║╚════${Y}██${O}║${Y}██${O}╔══${Y}██${O}║╚════╝${Y}██${O}╔══╝  ${Y}██${O}║     ${Y}██${O}║   ${Y}██${O}║${Y}██${O}║${Y}███${O}╗${Y}██${O}║${N}"
+        echo -e "${Y}███████${O}╗${Y}██${O}║${Y}███████${O}║${Y}██${O}║  ${Y}██${O}║      ${Y}██${O}║     ${Y}███████${O}╗╚${Y}██████${O}╔╝╚${Y}███${O}╔${Y}███${O}╔╝${N}"
+        echo -e "${O}╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝${N}"
+    fi
     echo ""
 }
 
@@ -217,6 +260,36 @@ find_tasks_file() {
     echo "$latest"
 }
 
+# ============================================================================
+# PROMPT DEFINITIONS (heredocs for easy editing)
+# ============================================================================
+
+PROMPT_SPECIFY=$(cat <<EOF
+/speckit.specify $FEATURE. Include comprehensive tests following Test Driven Development. $CONTEXT7_FULL
+EOF
+)
+
+PROMPT_PLAN=$(cat <<EOF
+/speckit.plan $CONTEXT7_FULL
+EOF
+)
+
+PROMPT_TASKS=$(cat <<EOF
+/speckit.tasks $CONTEXT7_NONE
+EOF
+)
+
+PROMPT_IMPLEMENT=$(cat <<EOF
+/speckit.implement $CONTEXT7_FULL
+EOF
+)
+
+# TASKS_FILE will be set after TASKS phase, so BEAUTIFY/REVIEW/TEST prompts are defined later
+
+# ============================================================================
+# MAIN EXECUTION
+# ============================================================================
+
 # Use SECONDS builtin for timing
 SECONDS=0
 START_TOTAL=$SECONDS
@@ -241,10 +314,10 @@ log "  Test Retries   ${W}$MAX_TEST_ITERATIONS${N}"
 log "  Log            ${D}$display_log${N}"
 log ""
 
-# Phase 1-4: Core workflow
-run_phase 1 "SPECIFY" claude -p --dangerously-skip-permissions "/speckit.specify $FEATURE. Include comprehensive tests following Test Driven Development. $CONTEXT7_FULL"
-run_phase 2 "PLAN" claude -p --dangerously-skip-permissions "/speckit.plan $CONTEXT7_FULL"
-run_phase 3 "TASKS" claude -p --dangerously-skip-permissions "/speckit.tasks $CONTEXT7_NONE"
+# Phase 1-3: Specification workflow
+run_phase 1 "SPECIFY" claude -p --dangerously-skip-permissions "$PROMPT_SPECIFY"
+run_phase 2 "PLAN" claude -p --dangerously-skip-permissions "$PROMPT_PLAN"
+run_phase 3 "TASKS" claude -p --dangerously-skip-permissions "$PROMPT_TASKS"
 
 # Find tasks file once after TASKS phase
 TASKS_FILE=$(find_tasks_file)
@@ -254,13 +327,52 @@ if [ -z "$TASKS_FILE" ]; then
 fi
 printf '%s\n' "Using tasks file: $TASKS_FILE" >> "$LOG_FILE"
 
-run_phase 4 "IMPLEMENT" claude -p --dangerously-skip-permissions "/speckit.implement $CONTEXT7_FULL"
+# Define remaining prompts now that TASKS_FILE is available
+PROMPT_BEAUTIFY=$(cat <<EOF
+/frontend-design:frontend-design Read $TASKS_FILE to understand the feature requirements.
+Then review all implemented code files to understand the current UI.
+Improve the UI/UX applying best practices:
+- Visual consistency
+- Accessibility
+- HCI principles
+- Intuitive layouts
+- Proper spacing
+- Typography
+- Smooth interactions
+$CONTEXT7_FULL
+EOF
+)
+
+PROMPT_REVIEW=$(cat <<EOF
+Read $TASKS_FILE to understand the feature requirements.
+Then use the Task tool to spawn a coderabbit:code-reviewer agent to perform a thorough code review of all implemented files.
+
+The review must cover:
+1) Code quality and bugs
+2) Performance issues
+3) Security vulnerabilities following OWASP guidelines
+
+Apply all fixes recommended by the review.
+EOF
+)
+
+PROMPT_TEST=$(cat <<EOF
+Read $TASKS_FILE to understand the feature requirements.
+Run all tests.
+Fix failures in implementation code (don't modify tests).
+Output ALL_TESTS_PASS when done or TESTS_FAILED if stuck.
+$CONTEXT7_FULL
+EOF
+)
+
+# Phase 4: Implementation
+run_phase 4 "IMPLEMENT" claude -p --dangerously-skip-permissions "$PROMPT_IMPLEMENT"
 
 # Phase 5: BEAUTIFY
-run_phase 5 "BEAUTIFY" claude -p --dangerously-skip-permissions "/frontend-design:frontend-design Read $TASKS_FILE to understand the feature requirements. Then review all implemented code files to understand the current UI. Improve the UI/UX applying best practices: visual consistency, accessibility, HCI principles, intuitive layouts, proper spacing, typography, and smooth interactions. $CONTEXT7_FULL"
+run_phase 5 "BEAUTIFY" claude -p --dangerously-skip-permissions "$PROMPT_BEAUTIFY"
 
 # Phase 6: REVIEW
-run_phase 6 "REVIEW" claude -p --dangerously-skip-permissions "Read $TASKS_FILE to understand the feature requirements. Then use the Task tool to spawn a coderabbit:code-reviewer agent to perform a thorough code review of all implemented files. The review must cover: 1) Code quality and bugs, 2) Performance issues, 3) Security vulnerabilities following OWASP guidelines. Apply all fixes recommended by the review."
+run_phase 6 "REVIEW" claude -p --dangerously-skip-permissions "$PROMPT_REVIEW"
 
 # Phase 7: TEST - Self-healing loop
 PHASE="TEST"
@@ -273,7 +385,7 @@ while [ "$iteration" -lt "$MAX_TEST_ITERATIONS" ]; do
     iteration=$((iteration + 1))
     log "  ${C}↻${N} Attempt $iteration/$MAX_TEST_ITERATIONS"
 
-    RESULT=$(claude -p --dangerously-skip-permissions "Read $TASKS_FILE to understand the feature requirements. Run all tests. Fix failures in implementation code (don't modify tests). Output ALL_TESTS_PASS when done or TESTS_FAILED if stuck. $CONTEXT7_FULL" 2>&1)
+    RESULT=$(claude -p --dangerously-skip-permissions "$PROMPT_TEST" 2>&1)
     printf '%s\n' "$RESULT" >> "$LOG_FILE"
 
     if printf '%s' "$RESULT" | grep -q "ALL_TESTS_PASS"; then
