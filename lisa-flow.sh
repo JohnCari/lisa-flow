@@ -48,9 +48,9 @@ check_terminal_width() {
 }
 
 # Phase tracking
-TOTAL_PHASES=8
+TOTAL_PHASES=7
 declare -a PHASE_TIMES=()
-declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "SECURITY" "REVIEW" "TEST")
+declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "REVIEW" "TEST")
 
 # Context7 instructions - phase-specific
 CONTEXT7_FULL="When using any library or framework, use Context7 MCP to get accurate docs: 1) mcp__context7__resolve-library-id with library name. 2) mcp__context7__query-docs with the ID and your specific question."
@@ -252,13 +252,13 @@ PHASE_TIMES[5]=$elapsed
 log "${G}✓${N} BEAUTIFY ${D}($(format_time "$elapsed"))${N}"
 log ""
 
-# SECURITY phase
-PHASE="SECURITY"
+# REVIEW phase
+PHASE="REVIEW"
 START=$SECONDS
 local_exit_code=0
-log "${D}[${G}$(progress_bar 6 "$TOTAL_PHASES")${D}]${N} 6/${TOTAL_PHASES} ${Y}SECURITY${N}"
+log "${D}[${G}$(progress_bar 6 "$TOTAL_PHASES")${D}]${N} 6/${TOTAL_PHASES} ${Y}REVIEW${N}"
 
-output=$(claude -p --dangerously-skip-permissions "Use the Semgrep MCP server to run a security scan on all implemented code files for this feature. Review the findings and fix any security vulnerabilities identified. Focus on: code vulnerabilities, secrets/credentials, and supply chain issues." 2>&1) || local_exit_code=$?
+output=$(claude -p --dangerously-skip-permissions "Read $TASKS_FILE to understand the feature requirements. Then use the Task tool to spawn a coderabbit:code-reviewer agent to perform a thorough code review of all implemented files. The review must cover: 1) Code quality and bugs, 2) Performance issues, 3) Security vulnerabilities following OWASP guidelines. Apply all fixes recommended by the review." 2>&1) || local_exit_code=$?
 echo "$output" >> "$LOG_FILE"
 if [ "$local_exit_code" -ne 0 ]; then
     echo "$output"
@@ -267,31 +267,13 @@ fi
 
 elapsed=$((SECONDS - START))
 PHASE_TIMES[6]=$elapsed
-log "${G}✓${N} SECURITY ${D}($(format_time "$elapsed"))${N}"
-log ""
-
-# REVIEW phase
-PHASE="REVIEW"
-START=$SECONDS
-local_exit_code=0
-log "${D}[${G}$(progress_bar 7 "$TOTAL_PHASES")${D}]${N} 7/${TOTAL_PHASES} ${Y}REVIEW${N}"
-
-output=$(claude -p --dangerously-skip-permissions "Read $TASKS_FILE to understand the feature requirements. Then use the Task tool to spawn a coderabbit:code-reviewer agent to perform a thorough code review of all implemented files. Apply any fixes recommended by the review. $CONTEXT7_NONE" 2>&1) || local_exit_code=$?
-echo "$output" >> "$LOG_FILE"
-if [ "$local_exit_code" -ne 0 ]; then
-    echo "$output"
-    exit "$local_exit_code"
-fi
-
-elapsed=$((SECONDS - START))
-PHASE_TIMES[7]=$elapsed
 log "${G}✓${N} REVIEW ${D}($(format_time "$elapsed"))${N}"
 log ""
 
 # TEST phase
 PHASE="TEST"
 START_TEST=$SECONDS
-log "${D}[${G}$(progress_bar 8 "$TOTAL_PHASES")${D}]${N} 8/${TOTAL_PHASES} ${Y}TEST${N}"
+log "${D}[${G}$(progress_bar 7 "$TOTAL_PHASES")${D}]${N} 7/${TOTAL_PHASES} ${Y}TEST${N}"
 
 iteration=0
 while [ "$iteration" -lt "$MAX_TEST_ITERATIONS" ]; do
@@ -303,7 +285,7 @@ while [ "$iteration" -lt "$MAX_TEST_ITERATIONS" ]; do
 
     if echo "$RESULT" | grep -q "ALL_TESTS_PASS"; then
         elapsed_test=$((SECONDS - START_TEST))
-        PHASE_TIMES[8]=$elapsed_test
+        PHASE_TIMES[7]=$elapsed_test
         elapsed=$((SECONDS - START_TOTAL))
         log "${G}✓${N} TEST ${D}($(format_time "$elapsed_test"))${N}"
         print_summary "success" "$elapsed"
@@ -317,7 +299,7 @@ done
 echo "$RESULT"
 
 elapsed_test=$((SECONDS - START_TEST))
-PHASE_TIMES[8]=$elapsed_test
+PHASE_TIMES[7]=$elapsed_test
 elapsed=$((SECONDS - START_TOTAL))
 print_summary "failed" "$elapsed"
 log "${D}Log: $LOG_FILE${N}"

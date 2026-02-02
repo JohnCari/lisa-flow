@@ -18,7 +18,6 @@ Combines [GitHub Spec Kit](https://github.com/github/spec-kit) phases with a [Ra
 
 ### MCP Servers
 - [Context7](https://github.com/upstash/context7) - up-to-date library documentation (works in headless mode with `-p` flag)
-- [Semgrep](https://github.com/semgrep/mcp) - security vulnerability scanning for SECURITY phase
 
 ## Setup
 
@@ -36,10 +35,6 @@ Add to `~/.claude/settings.json`:
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"]
-    },
-    "semgrep": {
-      "command": "uvx",
-      "args": ["--python", "3.12", "semgrep-mcp"]
     }
   }
 }
@@ -70,7 +65,7 @@ chmod +x lisa-flow/lisa-flow.sh
 ## How It Works
 
 ```
-SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → SECURITY → REVIEW → TEST
+SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → REVIEW → TEST
 ```
 
 | Phase | Description |
@@ -80,8 +75,7 @@ SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → SECURITY → REVIEW �
 | **Tasks** | Breaks down into tasks.md |
 | **Implement** | Builds the feature |
 | **Beautify** | UI/UX polish (accessibility, HCI, visual consistency) |
-| **Security** | Semgrep MCP security scan (vulnerabilities, secrets, supply chain) |
-| **Review** | CodeRabbit agent code review with autonomous fix cycles |
+| **Review** | CodeRabbit agent: code quality, performance, and security (OWASP) |
 | **Test** | Self-healing loop until all tests pass |
 
 The test loop reads the latest `tasks.md` and iterates until all tests pass or max iterations reached.
