@@ -50,10 +50,11 @@ chmod +x lisa-flow/lisa-flow.sh
 ## Usage
 
 ```bash
-./lisa-flow.sh <feature> [max_test_iterations]
+./lisa-flow.sh <feature> [retries]
 ```
 
-**Tests are automatically included** - no need to specify "with tests".
+- `retries` - Max test attempts (default: 5)
+- **Tests are automatically included** - no need to specify "with tests"
 
 ### Input Methods
 
