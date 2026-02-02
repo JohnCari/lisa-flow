@@ -50,7 +50,7 @@ chmod +x lisa-flow/lisa-flow.sh
 ## Usage
 
 ```bash
-./lisa-flow.sh <feature> [max_test_iterations] [--no-color]
+./lisa-flow.sh <feature> [max_test_iterations]
 ```
 
 **Tests are automatically included** - no need to specify "with tests".
@@ -61,7 +61,6 @@ chmod +x lisa-flow/lisa-flow.sh
 |--------|---------|-------------|
 | Inline text | `"Build auth API"` | Direct feature description |
 | @file | `@spec.md` | Read from file (@ prefix) |
-| File path | `./specs/auth.md` | Auto-detect if file exists |
 
 ### Examples
 
@@ -72,11 +71,8 @@ chmod +x lisa-flow/lisa-flow.sh
 # Read from file
 ./lisa-flow.sh @specs/my-feature.md
 
-# Auto-detect file path
-./lisa-flow.sh ./specs/shopping-cart.md
-
-# With options
-./lisa-flow.sh "Implement shopping cart" 10 --no-color
+# With custom test retries
+./lisa-flow.sh "Implement shopping cart" 10
 ```
 
 ## How It Works
@@ -91,8 +87,8 @@ SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → REVIEW → TEST
 | **Plan** | Technical implementation plan |
 | **Tasks** | Breaks down into tasks.md |
 | **Implement** | Builds the feature |
-| **Beautify** | UI/UX polish (accessibility, HCI, visual consistency) |
-| **Review** | CodeRabbit agent: code quality, performance, and security (OWASP) |
+| **Beautify** | UI/UX polish on session's frontend files only (maintains design coherence) |
+| **Review** | CodeRabbit reviews session's changed files: quality, performance, security (OWASP) |
 | **Test** | Self-healing loop until all tests pass |
 
 The test loop reads the latest `tasks.md` and iterates until all tests pass or max iterations reached.
@@ -108,12 +104,12 @@ The test loop reads the latest `tasks.md` and iterates until all tests pass or m
 
 ## Features
 
-- **Flexible input** - Accepts inline text, @file syntax, or auto-detected file paths
+- **Flexible input** - Accepts inline text or @file syntax
+- **Session-scoped phases** - BEAUTIFY/REVIEW only process files changed this session
 - **Safe command execution** - No `eval`, uses array-based execution to prevent command injection
 - **ISO 8601 log timestamps** - Sortable log filenames (`YYYY-MM-DD_HH-MM-SS`)
-- **Improved error handling** - ERR trap includes line numbers and logs to file
+- **Log rotation** - Auto-deletes logs older than 7 days
 - **Progress visualization** - Unicode progress bar and phase timing summary
-- **SECONDS builtin** - Efficient timing without subshells
 
 ## Security
 
