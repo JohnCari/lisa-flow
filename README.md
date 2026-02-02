@@ -39,7 +39,7 @@ Add to `~/.claude/settings.json`:
     },
     "semgrep": {
       "command": "uvx",
-      "args": ["semgrep-mcp"]
+      "args": ["--python", "3.12", "semgrep-mcp"]
     }
   }
 }
