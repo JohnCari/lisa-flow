@@ -30,7 +30,7 @@ show_banner() {
 if [ -z "$FEATURE_INPUT" ]; then
     show_banner
     echo -e "  Usage: ./lisa-flow.sh ${Y}<feature>${N} ${D}[retries]${N}"
-    echo -e "         feature: text, @file, or path"
+    echo -e "         feature: text or @file"
     echo ""
     exit 1
 fi
@@ -41,8 +41,6 @@ resolve_feature_input() {
         local file="${input:1}"
         [[ -f "$file" ]] || { echo "Error: File not found: $file" >&2; return 1; }
         cat "$file"
-    elif [[ -f "$input" ]]; then
-        cat "$input"
     else
         printf '%s' "$input"
     fi
@@ -132,7 +130,7 @@ find_tasks_file() {
     [ ${#tasks_files[@]} -eq 0 ] && { echo ""; return; }
     local latest="" latest_time=0
     for f in "${tasks_files[@]}"; do
-        local mtime; mtime=$(stat -c %Y "$f" 2>/dev/null || stat -f %m "$f" 2>/dev/null || echo 0)
+        local mtime; mtime=$(stat -c %Y "$f")
         [ "$mtime" -gt "$latest_time" ] && { latest_time=$mtime; latest="$f"; }
     done
     echo "$latest"
