@@ -258,7 +258,7 @@ START=$SECONDS
 local_exit_code=0
 log "${D}[${G}$(progress_bar 6 "$TOTAL_PHASES")${D}]${N} 6/${TOTAL_PHASES} ${Y}SECURITY${N}"
 
-output=$(claude -p --dangerously-skip-permissions "Read $TASKS_FILE to understand the feature requirements. Then review all implemented code files applying OWASP Secure Coding Practices: input validation, output encoding, authentication and password management, session management, access control, cryptographic practices, error handling and logging, data protection, communication security, system configuration, database security, file management, memory management, and general secure coding practices. Fix any issues found. $CONTEXT7_NONE" 2>&1) || local_exit_code=$?
+output=$(claude -p --dangerously-skip-permissions "Use the Semgrep MCP server to run a security scan on all implemented code files for this feature. Review the findings and fix any security vulnerabilities identified. Focus on: code vulnerabilities, secrets/credentials, and supply chain issues." 2>&1) || local_exit_code=$?
 echo "$output" >> "$LOG_FILE"
 if [ "$local_exit_code" -ne 0 ]; then
     echo "$output"
