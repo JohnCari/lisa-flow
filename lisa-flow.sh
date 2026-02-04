@@ -61,12 +61,9 @@ find "$LOG_DIR" -name "lisa-flow_*.log" -type f -mtime +"$LOG_RETENTION_DAYS" -d
 TZ="${TZ:-America/New_York}"
 export TZ
 
-# Capture git state for scoped BEAUTIFY
-START_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
-
-TOTAL_PHASES=6
+TOTAL_PHASES=5
 declare -a PHASE_TIMES=()
-declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "TEST")
+declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "TEST")
 
 CONTEXT7="When using any library or framework, use Context7 MCP to get accurate docs: 1) mcp__context7__resolve-library-id with library name. 2) mcp__context7__query-docs with the ID and your specific question."
 
@@ -144,7 +141,7 @@ find_tasks_file() {
 PROMPT_SPECIFY="/speckit.specify $FEATURE. Include comprehensive tests following Test Driven Development. $CONTEXT7"
 PROMPT_PLAN="/speckit.plan $CONTEXT7"
 PROMPT_TASKS="/speckit.tasks"
-PROMPT_IMPLEMENT="/speckit.implement $CONTEXT7"
+PROMPT_IMPLEMENT="/speckit.implement For frontend/UI components, use /frontend-design to ensure high design quality. $CONTEXT7"
 
 # Main
 SECONDS=0
@@ -177,24 +174,6 @@ PROMPT_TEST="Read $TASKS_FILE. Perform these checks and fix any issues:
 Output ALL_TESTS_PASS when all checks pass or TESTS_FAILED if stuck. $CONTEXT7"
 
 run_phase 4 "IMPLEMENT" claude -p --dangerously-skip-permissions "$PROMPT_IMPLEMENT"
-
-# BEAUTIFY - only session's frontend files, but maintain design coherence
-FRONTEND_PATTERNS=("*.tsx" "*.jsx" "*.ts" "*.js" "*.css" "*.html")
-if [ -n "$START_COMMIT" ]; then
-    CHANGED_FRONTEND=$(git diff --name-only "$START_COMMIT" -- "${FRONTEND_PATTERNS[@]}" 2>/dev/null | tr '\n' ' ')
-else
-    CHANGED_FRONTEND=""
-fi
-
-if [ -n "$CHANGED_FRONTEND" ]; then
-    PROMPT_BEAUTIFY="/frontend-design:frontend-design MODIFY ONLY these files: $CHANGED_FRONTEND
-But FIRST review existing app design (components, styles, tailwind config) to ensure coherence.
-Improve UI/UX: visual consistency with existing design, accessibility, HCI, layouts, spacing, typography, interactions. $CONTEXT7"
-    run_phase 5 "BEAUTIFY" claude -p --dangerously-skip-permissions "$PROMPT_BEAUTIFY"
-else
-    log "${DIM}○${RESET} BEAUTIFY ${DIM}(skipped - no frontend files)${RESET}"
-    log ""
-fi
 
 # TEST - Self-healing loop with code quality review
 PHASE="TEST"

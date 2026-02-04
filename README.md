@@ -23,7 +23,7 @@ lisa-flow/lisa-flow.sh @spec.md 10
 ## Phases
 
 ```
-SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → TEST
+SPECIFY → PLAN → TASKS → IMPLEMENT → TEST
 ```
 
 TEST: tests + code quality + security + performance (self-healing loop)
