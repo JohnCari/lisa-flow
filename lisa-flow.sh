@@ -64,16 +64,16 @@ export TZ
 # Capture git state for scoped BEAUTIFY
 START_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
 
-TOTAL_PHASES=7
+TOTAL_PHASES=6
 declare -a PHASE_TIMES=()
-declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "REVIEW" "TEST")
+declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "BEAUTIFY" "TEST")
 
 CONTEXT7="When using any library or framework, use Context7 MCP to get accurate docs: 1) mcp__context7__resolve-library-id with library name. 2) mcp__context7__query-docs with the ID and your specific question."
 
 PHASE="INIT"
 error_handler() { echo -e "\n${RED}✗ Failed at: $PHASE (line $1)${RESET}\n" | tee -a "$LOG_FILE"; }
 trap 'error_handler $LINENO' ERR
-trap 'echo -e "\n${YELLOW}Interrupted${RESET}\n"; exit 130' INT
+trap 'echo -e "\n${YELLOW}Interrupted${RESET}\n"; exit 130' INT  # 128 + SIGINT(2)
 
 log() { echo -e "$1" | tee -a "$LOG_FILE"; }
 
@@ -148,7 +148,6 @@ PROMPT_IMPLEMENT="/speckit.implement $CONTEXT7"
 
 # Main
 SECONDS=0
-START_TOTAL=$SECONDS
 
 show_banner
 
@@ -170,7 +169,12 @@ TASKS_FILE=$(find_tasks_file)
 [ -z "$TASKS_FILE" ] && { log "${RED}✗ No tasks.md found after TASKS phase${RESET}"; exit 1; }
 printf '%s\n' "Using tasks file: $TASKS_FILE" >> "$LOG_FILE"
 
-PROMPT_TEST="Read $TASKS_FILE. Run all tests. Fix failures in implementation (don't modify tests). Output ALL_TESTS_PASS when done or TESTS_FAILED if stuck. $CONTEXT7"
+PROMPT_TEST="Read $TASKS_FILE. Perform these checks and fix any issues:
+1. Run all tests - fix failures in implementation (don't modify tests)
+2. Code quality - fix bugs, dead code, magic numbers, code smells
+3. Security - check and fix OWASP vulnerabilities
+4. Performance - fix inefficiencies
+Output ALL_TESTS_PASS when all checks pass or TESTS_FAILED if stuck. $CONTEXT7"
 
 run_phase 4 "IMPLEMENT" claude -p --dangerously-skip-permissions "$PROMPT_IMPLEMENT"
 
@@ -192,26 +196,10 @@ else
     log ""
 fi
 
-# REVIEW - only session's changed files
-if [ -n "$START_COMMIT" ]; then
-    CHANGED_FILES=$(git diff --name-only "$START_COMMIT" 2>/dev/null | tr '\n' ' ')
-else
-    CHANGED_FILES=""
-fi
-
-if [ -n "$CHANGED_FILES" ]; then
-    PROMPT_REVIEW="Use Task tool to spawn coderabbit:code-reviewer agent to review ONLY these files: $CHANGED_FILES
-Review must cover: 1) Code quality/bugs 2) Performance 3) Security (OWASP). Apply all fixes."
-    run_phase 6 "REVIEW" claude -p --dangerously-skip-permissions "$PROMPT_REVIEW"
-else
-    log "${DIM}○${RESET} REVIEW ${DIM}(skipped - no files changed)${RESET}"
-    log ""
-fi
-
-# TEST - Self-healing loop
+# TEST - Self-healing loop with code quality review
 PHASE="TEST"
 START_TEST=$SECONDS
-log "${DIM}[${GREEN}$(progress_bar $TOTAL_PHASES "$TOTAL_PHASES")${DIM}]${RESET} ${TOTAL_PHASES}/${TOTAL_PHASES} ${YELLOW}TEST${RESET}"
+log "${DIM}[${GREEN}$(progress_bar "$TOTAL_PHASES" "$TOTAL_PHASES")${DIM}]${RESET} ${TOTAL_PHASES}/${TOTAL_PHASES} ${YELLOW}TEST${RESET}"
 
 iteration=0
 RESULT=""
@@ -223,7 +211,7 @@ while [ "$iteration" -lt "$MAX_TEST_ITERATIONS" ]; do
     if printf '%s' "$RESULT" | grep -q "ALL_TESTS_PASS"; then
         elapsed_test=$((SECONDS - START_TEST))
         PHASE_TIMES[$TOTAL_PHASES]=$elapsed_test
-        elapsed=$((SECONDS - START_TOTAL))
+        elapsed=$SECONDS
         log "${GREEN}✓${RESET} TEST ${DIM}($(format_time "$elapsed_test"))${RESET}"
         print_summary "success" "$elapsed"
         log "${DIM}Log: $LOG_FILE${RESET}"
@@ -235,7 +223,7 @@ done
 printf '%s\n' "$RESULT"
 elapsed_test=$((SECONDS - START_TEST))
 PHASE_TIMES[$TOTAL_PHASES]=$elapsed_test
-elapsed=$((SECONDS - START_TOTAL))
+elapsed=$SECONDS
 print_summary "failed" "$elapsed"
 log "${DIM}Log: $LOG_FILE${RESET}"
 log ""
