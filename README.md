@@ -19,8 +19,11 @@ Give it a feature description. It specs, plans, implements, and polishes — the
 ```bash
 lisa-flow/lisa-flow.sh <feature> [retries]
 lisa-flow/lisa-flow.sh "Build auth API"
-lisa-flow/lisa-flow.sh @spec.md 10
+lisa-flow/lisa-flow.sh @path/to/spec.md 10
 ```
+
+- `"feature text"` — describe your feature directly as a string
+- `@path/to/file` — read feature description from a file (use `@` prefix followed by the file path)
 
 ## Phases
 
