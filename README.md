@@ -8,9 +8,11 @@ Give it a feature description. It specs, plans, implements, and polishes — the
 
 ## Setup
 
-1. [Install Spec Kit](https://github.com/github/spec-kit#installation)
-2. [Install Context7 MCP](https://github.com/upstash/context7#claude-code)
-3. Clone: `git clone https://github.com/JohnCari/lisa-flow.git`
+1. [Install Claude Code](https://docs.anthropic.com/en/docs/claude-code) (native install)
+2. Install `/frontend-design` skill from [Anthropic Marketplace](https://marketplace.anthropic.com)
+3. [Install Spec Kit](https://github.com/github/spec-kit#installation)
+4. [Install Context7 MCP](https://github.com/upstash/context7#claude-code)
+5. Clone: `git clone https://github.com/JohnCari/lisa-flow.git`
 
 ## Usage
 
