@@ -1,8 +1,10 @@
 # Lisa Flow
 
-> AI development with TDD and self-healing tests
+> Autonomous AI development with structured specs and self-healing tests
 
-Runs your feature through structured phases (specify → implement), then loops until all tests pass. Inspired by [Ralph Loop](https://ghuntley.com/loop/) — when something breaks, return it to the loop.
+Lisa Flow combines [GitHub Spec Kit](https://github.com/github/spec-kit)'s structured phases with [Geoffrey Huntley's Ralph Loop](https://ghuntley.com/loop/) philosophy.
+
+Give it a feature description. It specs, plans, implements, and polishes — then runs a self-healing test loop until everything passes. When something breaks, it goes back to the loop.
 
 ## Setup
 
