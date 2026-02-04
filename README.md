@@ -2,7 +2,7 @@
 
 > AI development with TDD and self-healing tests
 
-Combines [Spec Kit](https://github.com/github/spec-kit) + [Ralph Loop](https://ghuntley.com/loop/)
+Runs your feature through structured phases (specify → implement), then loops until all tests pass. Inspired by [Ralph Loop](https://ghuntley.com/loop/) — when something breaks, return it to the loop.
 
 ## Setup
 
@@ -13,9 +13,9 @@ Combines [Spec Kit](https://github.com/github/spec-kit) + [Ralph Loop](https://g
 ## Usage
 
 ```bash
-./lisa-flow.sh <feature> [retries]
-./lisa-flow.sh "Build auth API"
-./lisa-flow.sh @spec.md 10
+lisa-flow/lisa-flow.sh <feature> [retries]
+lisa-flow/lisa-flow.sh "Build auth API"
+lisa-flow/lisa-flow.sh @spec.md 10
 ```
 
 ## Phases
@@ -24,7 +24,7 @@ Combines [Spec Kit](https://github.com/github/spec-kit) + [Ralph Loop](https://g
 SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → TEST
 ```
 
-TEST phase: tests + code quality + security + performance (self-healing loop)
+TEST: tests + code quality + security + performance (self-healing loop)
 
 ## License
 
