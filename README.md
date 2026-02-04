@@ -1,6 +1,6 @@
 # Lisa Flow
 
-> Structured AI development with automatic TDD, UI polish, and security review
+> Structured AI development with automatic TDD, UI polish, and self-healing tests
 
 Combines [GitHub Spec Kit](https://github.com/github/spec-kit) phases with a [Ralph-style](https://ghuntley.com/loop/) self-healing test loop.
 
@@ -14,7 +14,6 @@ Combines [GitHub Spec Kit](https://github.com/github/spec-kit) phases with a [Ra
 ### Claude Code Skills
 - [GitHub Spec Kit](https://github.com/github/spec-kit) - speckit.* skills
 - frontend-design - for BEAUTIFY phase
-- [CodeRabbit](https://github.com/coderabbitai/coderabbit) - for REVIEW phase
 
 ### MCP Servers
 - [Context7](https://github.com/upstash/context7) - up-to-date library documentation (works in headless mode with `-p` flag)
@@ -79,7 +78,7 @@ chmod +x lisa-flow/lisa-flow.sh
 ## How It Works
 
 ```
-SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → REVIEW → TEST
+SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → TEST
 ```
 
 | Phase | Description |
@@ -89,10 +88,18 @@ SPECIFY → PLAN → TASKS → IMPLEMENT → BEAUTIFY → REVIEW → TEST
 | **Tasks** | Breaks down into tasks.md |
 | **Implement** | Builds the feature |
 | **Beautify** | UI/UX polish on session's frontend files only (maintains design coherence) |
-| **Review** | CodeRabbit reviews session's changed files: quality, performance, security (OWASP) |
-| **Test** | Self-healing loop: runs tests, fixes failures, repeats until pass or max retries |
+| **Test** | Self-healing loop with integrated code review |
 
-The TEST phase iterates until all tests pass or max retries reached. Each iteration runs tests and fixes implementation code (never modifies tests).
+### TEST Phase Details
+
+The TEST phase combines testing with code quality review in a self-healing loop:
+
+1. **Run all tests** - fix failures in implementation (never modifies tests)
+2. **Code quality** - fix bugs, dead code, magic numbers, code smells
+3. **Security** - check and fix OWASP vulnerabilities
+4. **Performance** - fix inefficiencies
+
+Iterates until all checks pass or max retries reached.
 
 ## Inspiration
 
@@ -106,7 +113,7 @@ The TEST phase iterates until all tests pass or max retries reached. Each iterat
 ## Features
 
 - **Flexible input** - Accepts inline text or @file syntax
-- **Session-scoped phases** - BEAUTIFY/REVIEW only process files changed this session
+- **Session-scoped phases** - BEAUTIFY only processes files changed this session
 - **Safe command execution** - No `eval`, uses array-based execution to prevent command injection
 - **ISO 8601 log timestamps** - Sortable log filenames (`YYYY-MM-DD_HH-MM-SS`)
 - **Log rotation** - Auto-deletes logs older than 7 days
