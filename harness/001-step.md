@@ -1,1 +1,1 @@
-Describe your first feature or step here. One sentence or a full spec — lisa-flow handles the rest.
+Build a click counter. A single button that counts how many times it has been clicked. Display the count on the page. Style it cleanly.
