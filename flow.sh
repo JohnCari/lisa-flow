@@ -7,7 +7,7 @@ set -euo pipefail
 readonly SPEC_DIR_REL="../specs"  # Relative to script directory
 
 FEATURE_INPUT="${1:-}"
-MAX_TEST_ITERATIONS="${2:-5}"
+MAX_TEST_ITERATIONS="${2:-3}"
 
 if [ -z "$FEATURE_INPUT" ]; then
     echo "Error: FEATURE_INPUT is required" >&2

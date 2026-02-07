@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly HARNESS_DIR="$SCRIPT_DIR/harness"
 readonly MASTER_PLAN="$SCRIPT_DIR/harness/masterplan.md"
 
-MAX_RETRIES="${1:-5}"
+MAX_RETRIES="${1:-3}"
 
 CONTEXT7="When using any library or framework, use Context7 MCP to get accurate docs: 1) mcp__context7__resolve-library-id with library name. 2) mcp__context7__query-docs with the ID and your specific question."
 
