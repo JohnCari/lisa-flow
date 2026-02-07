@@ -48,7 +48,7 @@ fi
 [[ "$MAX_RETRIES" =~ ^[1-9][0-9]*$ ]] || { echo "Error: retries must be a positive integer"; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LISA_FLOW="$SCRIPT_DIR/lisa-flow.sh"
+LISA_FLOW="$SCRIPT_DIR/flow.sh"
 LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/orchestrator_$(date +%Y-%m-%d_%H-%M-%S).log"

@@ -40,9 +40,9 @@ Restart Claude Code after enabling for changes to take effect.
 ## Usage
 
 ```bash
-lisa-flow/lisa-flow.sh <feature> [retries]
-lisa-flow/lisa-flow.sh "Build auth API"
-lisa-flow/lisa-flow.sh @path/to/spec.md 10
+lisa-flow/flow.sh <feature> [retries]
+lisa-flow/flow.sh "Build auth API"
+lisa-flow/flow.sh @path/to/spec.md 10
 ```
 
 - `"feature text"` — describe your feature directly as a string
@@ -76,7 +76,7 @@ echo "Build auth API with JWT" > harness/001-auth.md
 echo "Build user dashboard" > harness/002-dashboard.md
 echo "Add notifications system" > harness/003-notifications.md
 
-lisa-flow/lisa-orchestrator.sh [retries]
+lisa-flow/lisa.sh [retries]
 ```
 
 - `harness/masterplan.md` — optional big-picture context prepended to every feature
