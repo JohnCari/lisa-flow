@@ -138,14 +138,12 @@ done
 # Final integration pass
 log "[$TOTAL/$TOTAL] INTEGRATION"
 
-INTEGRATION_PROMPT="You are running a final integration check across the entire project.
-Multiple features were just built independently. Your job:
-1. Run ALL tests across the entire project - fix failures in implementation (don't modify tests)
-2. Check for cross-feature conflicts (duplicate routes, naming collisions, import errors)
-3. Code quality - fix bugs, dead code, magic numbers, code smells
-4. Security - check and fix OWASP vulnerabilities
-5. Performance - fix inefficiencies
-Output ALL_TESTS_PASS when everything works together or TESTS_FAILED if stuck. $CONTEXT7"
+INTEGRATION_PROMPT="Multiple features were just built independently. Create an agent team with 4 teammates to run a final integration check:
+1. Test runner teammate: run ALL tests across the entire project, fix failures in implementation only (don't modify tests)
+2. Conflict checker teammate: find and fix cross-feature conflicts (duplicate routes, naming collisions, import errors)
+3. Security teammate: check and fix OWASP vulnerabilities
+4. Quality teammate: fix bugs, dead code, magic numbers, code smells, and performance issues
+Each teammate owns their domain and works independently. Wait for all teammates to finish. Synthesize results and output ALL_TESTS_PASS when everything works together or TESTS_FAILED if stuck. Clean up the team when done. $CONTEXT7"
 
 integration_start=$SECONDS
 integration_result="FAIL"
