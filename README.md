@@ -58,6 +58,32 @@ SPECIFY → PLAN → TASKS → IMPLEMENT → TEST
 - **IMPLEMENT**: agent teams parallelize coding of independent tasks
 - **TEST**: agent teams parallelize checks (tests, code quality, security, performance) — self-healing loop
 
+## Orchestrator
+
+For multiple features, use the orchestrator. Drop `.md` files in a `harness/` directory and let it run through all of them autonomously — [Ralph Loop](https://ghuntley.com/loop/) style.
+
+```bash
+mkdir harness
+
+# Optional: big-picture context shared across all features
+cat > harness/masterplan.md << 'EOF'
+E-commerce platform. React-free, vanilla JS. All features share
+a common REST API at /api/. Use SQLite for storage.
+EOF
+
+# Feature files (numbered prefix controls order)
+echo "Build auth API with JWT" > harness/001-auth.md
+echo "Build user dashboard" > harness/002-dashboard.md
+echo "Add notifications system" > harness/003-notifications.md
+
+lisa-flow/lisa-orchestrator.sh [retries]
+```
+
+- `harness/masterplan.md` — optional big-picture context prepended to every feature
+- `harness/001-*.md` — individual features, processed in filename order
+- Each feature gets one retry on failure before moving on
+- Final integration pass tests everything together and fixes cross-feature issues
+
 ## License
 
 CC0 - Public Domain
