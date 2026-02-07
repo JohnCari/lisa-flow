@@ -71,7 +71,7 @@ lisa-flow/
 │   └── 002-step.md
 ├── lisa.sh                 # orchestrator (run this)
 ├── flow.sh                 # worker (called by lisa.sh)
-└── logs/
+└── logs/                   # lisa_001.log, flow_001.log, ...
 ```
 
 ### masterplan.md vs step files
@@ -93,24 +93,24 @@ SPECIFY → PLAN → TASKS → IMPLEMENT → TEST
 | **SPECIFY** | Generates a spec from the feature description | Single session |
 | **PLAN** | Researches and designs the implementation | Subagents |
 | **TASKS** | Breaks the plan into ordered tasks | Single session |
-| **IMPLEMENT** | Writes the code | Agent team |
+| **IMPLEMENT** | Writes the code | Subagents |
 | **TEST** | Self-healing loop — runs tests, fixes failures, checks quality/security/perf | Subagents |
 
 After all features complete, `lisa.sh` runs a **final integration pass** using an **agent team** to test everything together and fix cross-feature conflicts.
 
 ### Why subagents vs agent teams?
 
-**[Subagents](https://code.claude.com/docs/en/sub-agents)** are lightweight — they do independent work and report results back. Used for PLAN (parallel research) and TEST (parallel checks) where each task is self-contained and workers don't need to talk to each other. Lower token cost.
+**[Subagents](https://code.claude.com/docs/en/sub-agents)** are lightweight — they do independent work and report results back. Used in `flow.sh` for all phases (PLAN, IMPLEMENT, TEST) where each task is self-contained. Lower token cost.
 
-**[Agent teams](https://code.claude.com/docs/en/agent-teams)** are full Claude instances that coordinate with each other in real time. Used for IMPLEMENT (teammates own different files and need to avoid conflicts) and INTEGRATION (cross-feature fixes may affect the same files). Higher token cost, but worth it when coordination matters.
+**[Agent teams](https://code.claude.com/docs/en/agent-teams)** are full Claude instances that coordinate with each other in real time. Used only in `lisa.sh` for the INTEGRATION pass, where cross-feature fixes may affect the same files and teammates need to coordinate. Higher token cost, reserved for when coordination matters.
 
 ## How It Works
 
 1. `lisa.sh` reads all `.md` files from `lisa-flow/harness/` (excluding `masterplan.md`)
 2. For each feature, it prepends `masterplan.md` content (if present) and calls `flow.sh`
-3. `flow.sh` runs the feature through all 5 phases using `claude -p --dangerously-skip-permissions`
+3. `flow.sh` runs the feature through all 5 phases using subagents via `claude -p --dangerously-skip-permissions`
 4. If a feature fails, `lisa.sh` retries it once automatically
-5. After all features, `lisa.sh` runs a final integration pass to catch cross-feature issues
+5. After **all** features finish (001, 002, 003...), `lisa.sh` runs a final integration pass using an agent team
 6. Prints a summary table with PASS/FAIL per feature and total time
 
 The entire pipeline is fully autonomous — no human approval prompts, no interaction needed.

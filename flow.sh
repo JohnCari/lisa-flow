@@ -31,9 +31,9 @@ FEATURE=$(resolve_feature_input "$FEATURE_INPUT") || exit 1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
-LAST_NUM=$(ls "$LOG_DIR"/lisa-flow_*.log 2>/dev/null | sed 's/.*lisa-flow_\([0-9]*\)\.log/\1/' | sort -n | tail -1)
+LAST_NUM=$(ls "$LOG_DIR"/flow_*.log 2>/dev/null | sed 's/.*flow_\([0-9]*\)\.log/\1/' | sort -n | tail -1 || true)
 NEXT_NUM=$(printf '%03d' "$(( ${LAST_NUM:-0} + 1 ))")
-LOG_FILE="$LOG_DIR/lisa-flow_${NEXT_NUM}.log"
+LOG_FILE="$LOG_DIR/flow_${NEXT_NUM}.log"
 
 TOTAL_PHASES=5
 declare -a PHASE_TIMES=()
@@ -112,7 +112,7 @@ find_tasks_file() {
 PROMPT_SPECIFY="/speckit.specify $FEATURE. Include comprehensive tests following Test Driven Development. $CONTEXT7"
 PROMPT_PLAN="/speckit.plan Use subagents to research this feature in parallel: one for API and data layer research, one for architecture patterns and dependencies, one for testing strategy. Synthesize all findings into the plan. $CONTEXT7"
 PROMPT_TASKS="/speckit.tasks"
-PROMPT_IMPLEMENT="/speckit.implement Create an agent team to implement this feature. Break the work into independent tasks and spawn teammates, each owning a different set of files to avoid conflicts. Aim for 5-6 tasks per teammate. For frontend/UI components, use /frontend-design to ensure high design quality. Wait for all teammates to finish before proceeding. Clean up the team when done. $CONTEXT7"
+PROMPT_IMPLEMENT="/speckit.implement Use subagents to implement this feature in parallel: break the work into independent tasks and spawn subagents, each owning a different set of files to avoid conflicts. For frontend/UI components, use /frontend-design to ensure high design quality. $CONTEXT7"
 
 # Main
 SECONDS=0

@@ -30,9 +30,9 @@ fi
 LISA_FLOW="$SCRIPT_DIR/flow.sh"
 LOG_DIR="$SCRIPT_DIR/logs"
 rm -f "$LOG_DIR/.gitkeep"
-LAST_NUM=$(ls "$LOG_DIR"/orchestrator_*.log 2>/dev/null | sed 's/.*orchestrator_\([0-9]*\)\.log/\1/' | sort -n | tail -1)
+LAST_NUM=$(ls "$LOG_DIR"/lisa_*.log 2>/dev/null | sed 's/.*lisa_\([0-9]*\)\.log/\1/' | sort -n | tail -1 || true)
 NEXT_NUM=$(printf '%03d' "$(( ${LAST_NUM:-0} + 1 ))")
-LOG_FILE="$LOG_DIR/orchestrator_${NEXT_NUM}.log"
+LOG_FILE="$LOG_DIR/lisa_${NEXT_NUM}.log"
 
 log() { echo "$1" | tee -a "$LOG_FILE"; }
 
