@@ -95,9 +95,16 @@ print_summary() {
     log "${DIM}─────────────────────────────────────────────${RESET}"
     log ""
     for i in "${!PHASE_NAMES[@]}"; do
-        local idx=$((i + 1)) name="${PHASE_NAMES[$i]}" time="${PHASE_TIMES[$idx]:-}"
-        local icon="${GREEN}✓${RESET}" time_str=""
-        if [ -n "$time" ]; then time_str="$(format_time "$time")"; else icon="${DIM}○${RESET}"; time_str="-"; fi
+        local idx=$((i + 1)) name="${PHASE_NAMES[$i]}"
+        local time="" icon="" time_str=""
+        if [[ -v "PHASE_TIMES[$idx]" ]]; then
+            time="${PHASE_TIMES[$idx]}"
+            icon="${GREEN}✓${RESET}"
+            time_str="$(format_time "$time")"
+        else
+            icon="${DIM}○${RESET}"
+            time_str="-"
+        fi
         log "  $icon $(printf '%-12s' "$name") $(printf '%10s' "$time_str")"
     done
     log ""
@@ -139,9 +146,9 @@ find_tasks_file() {
 
 # Prompts
 PROMPT_SPECIFY="/speckit.specify $FEATURE. Include comprehensive tests following Test Driven Development. $CONTEXT7"
-PROMPT_PLAN="/speckit.plan $CONTEXT7"
+PROMPT_PLAN="/speckit.plan Use agent teams to parallelize research: spawn teammates to investigate different technical areas concurrently (e.g., APIs, architecture patterns, dependencies), then synthesize findings into the plan. $CONTEXT7"
 PROMPT_TASKS="/speckit.tasks"
-PROMPT_IMPLEMENT="/speckit.implement For frontend/UI components, use /frontend-design to ensure high design quality. $CONTEXT7"
+PROMPT_IMPLEMENT="/speckit.implement Use agent teams to parallelize: create a team, spawn teammates for independent tasks, coordinate their work, and wait for all to complete before finishing. For frontend/UI components, use /frontend-design to ensure high design quality. $CONTEXT7"
 
 # Main
 SECONDS=0
@@ -166,12 +173,12 @@ TASKS_FILE=$(find_tasks_file)
 [ -z "$TASKS_FILE" ] && { log "${RED}✗ No tasks.md found after TASKS phase${RESET}"; exit 1; }
 printf '%s\n' "Using tasks file: $TASKS_FILE" >> "$LOG_FILE"
 
-PROMPT_TEST="Read $TASKS_FILE. Perform these checks and fix any issues:
+PROMPT_TEST="Read $TASKS_FILE. Use agent teams to parallelize checks: spawn teammates to run these in parallel and fix any issues:
 1. Run all tests - fix failures in implementation (don't modify tests)
 2. Code quality - fix bugs, dead code, magic numbers, code smells
 3. Security - check and fix OWASP vulnerabilities
 4. Performance - fix inefficiencies
-Output ALL_TESTS_PASS when all checks pass or TESTS_FAILED if stuck. $CONTEXT7"
+Coordinate teammates, wait for all to finish, then output ALL_TESTS_PASS when all checks pass or TESTS_FAILED if stuck. $CONTEXT7"
 
 run_phase 4 "IMPLEMENT" claude -p --dangerously-skip-permissions "$PROMPT_IMPLEMENT"
 

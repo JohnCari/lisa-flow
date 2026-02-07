@@ -12,7 +12,30 @@ Give it a feature description. It specs, plans, implements, and polishes — the
 2. Install `/frontend-design` skill from [Anthropic Marketplace](https://marketplace.anthropic.com)
 3. [Install Spec Kit](https://github.com/github/spec-kit#installation)
 4. [Install Context7 MCP](https://github.com/upstash/context7#claude-code)
-5. Clone: `git clone https://github.com/JohnCari/lisa-flow.git`
+5. [Enable Agent Teams](#enable-agent-teams) (recommended)
+6. Clone: `git clone https://github.com/JohnCari/lisa-flow.git`
+
+### Enable Agent Teams
+
+Lisa Flow uses [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams) to parallelize work in the PLAN, IMPLEMENT, and TEST phases. Agent teams are experimental and disabled by default.
+
+Add this to your `~/.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+Or set the environment variable directly:
+
+```bash
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+```
+
+Restart Claude Code after enabling for changes to take effect.
 
 ## Usage
 
@@ -31,7 +54,9 @@ lisa-flow/lisa-flow.sh @path/to/spec.md 10
 SPECIFY → PLAN → TASKS → IMPLEMENT → TEST
 ```
 
-TEST: tests + code quality + security + performance (self-healing loop)
+- **PLAN**: agent teams parallelize research across technical areas
+- **IMPLEMENT**: agent teams parallelize coding of independent tasks
+- **TEST**: agent teams parallelize checks (tests, code quality, security, performance) — self-healing loop
 
 ## License
 
