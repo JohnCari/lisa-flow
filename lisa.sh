@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck shell=bash
-# lisa-orchestrator.sh - Queue-based feature orchestrator for Lisa Flow
-# Reads .md files from harness/, runs lisa-flow.sh for each, then integration test
+# lisa.sh - Queue-based feature orchestrator for Lisa Flow
+# Reads .md files from harness/, runs flow.sh for each, then integration test
 
 set -euo pipefail
 
@@ -9,41 +9,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 readonly HARNESS_DIR="$SCRIPT_DIR/harness"
 readonly MASTER_PLAN="$SCRIPT_DIR/harness/masterplan.md"
-readonly MAX_FEATURE_LEN=50
-readonly MAX_LOG_LEN=40
-readonly PROGRESS_BAR_WIDTH=30
 
 MAX_RETRIES="${1:-5}"
 
-# Colors
-GREEN='\033[0;32m' RED='\033[0;31m' YELLOW='\033[1;33m' CYAN='\033[0;36m' WHITE='\033[1;37m' DIM='\033[2m' RESET='\033[0m'
-ORANGE='\033[38;5;202m'
-
 CONTEXT7="When using any library or framework, use Context7 MCP to get accurate docs: 1) mcp__context7__resolve-library-id with library name. 2) mcp__context7__query-docs with the ID and your specific question."
 
-show_banner() {
-    echo ""
-    echo -e "${YELLOW}██${ORANGE}╗     ${YELLOW}██${ORANGE}╗${YELLOW}███████${ORANGE}╗ ${YELLOW}█████${ORANGE}╗       ${YELLOW}███████${ORANGE}╗${YELLOW}██${ORANGE}╗      ${YELLOW}██████${ORANGE}╗ ${YELLOW}██${ORANGE}╗    ${YELLOW}██${ORANGE}╗${RESET}"
-    echo -e "${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}╔════╝${YELLOW}██${ORANGE}╔══${YELLOW}██${ORANGE}╗      ${YELLOW}██${ORANGE}╔════╝${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}╔═══${YELLOW}██${ORANGE}╗${YELLOW}██${ORANGE}║    ${YELLOW}██${ORANGE}║${RESET}"
-    echo -e "${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║${YELLOW}███████${ORANGE}╗${YELLOW}███████${ORANGE}║${WHITE}█████${ORANGE}╗${YELLOW}█████${ORANGE}╗  ${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║   ${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}║ ${YELLOW}█${ORANGE}╗ ${YELLOW}██${ORANGE}║${RESET}"
-    echo -e "${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║╚════${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}╔══${YELLOW}██${ORANGE}║╚════╝${YELLOW}██${ORANGE}╔══╝  ${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║   ${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}║${YELLOW}███${ORANGE}╗${YELLOW}██${ORANGE}║${RESET}"
-    echo -e "${YELLOW}███████${ORANGE}╗${YELLOW}██${ORANGE}║${YELLOW}███████${ORANGE}║${YELLOW}██${ORANGE}║  ${YELLOW}██${ORANGE}║      ${YELLOW}██${ORANGE}║     ${YELLOW}███████${ORANGE}╗╚${YELLOW}██████${ORANGE}╔╝╚${YELLOW}███${ORANGE}╔${YELLOW}███${ORANGE}╔╝${RESET}"
-    echo -e "${ORANGE}╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝${RESET}"
-    echo -e "                         ${DIM}ORCHESTRATOR${RESET}"
-    echo ""
-}
-
 if [ ! -d "$HARNESS_DIR" ]; then
-    show_banner
-    echo -e "  ${RED}✗${RESET} No ${WHITE}harness/${RESET} directory found in lisa-flow/"
+    echo "Error: No harness/ directory found in lisa-flow/"
     echo ""
-    echo -e "  Create it with numbered .md files:"
-    echo -e "    ${DIM}mkdir lisa-flow/harness${RESET}"
-    echo -e "    ${DIM}echo \"Build auth API\" > lisa-flow/harness/001-auth.md${RESET}"
-    echo -e "    ${DIM}echo \"Build dashboard\" > lisa-flow/harness/002-dashboard.md${RESET}"
+    echo "Create it with numbered .md files:"
+    echo "  mkdir lisa-flow/harness"
+    echo "  echo \"Build auth API\" > lisa-flow/harness/001-step.md"
     echo ""
-    echo -e "  Usage: lisa-flow/lisa.sh ${DIM}[retries]${RESET}"
-    echo ""
+    echo "Usage: lisa-flow/lisa.sh [retries]"
     exit 1
 fi
 
@@ -55,7 +33,7 @@ rm -f "$LOG_DIR/.gitkeep"
 NEXT_NUM=$(printf '%03d' "$(( $(ls "$LOG_DIR"/orchestrator_*.log 2>/dev/null | wc -l) + 1 ))")
 LOG_FILE="$LOG_DIR/orchestrator_${NEXT_NUM}.log"
 
-log() { echo -e "$1" | tee -a "$LOG_FILE"; }
+log() { echo "$1" | tee -a "$LOG_FILE"; }
 
 format_time() {
     local secs="${1:-0}"
@@ -68,17 +46,7 @@ format_time() {
     fi
 }
 
-progress_bar() {
-    local current="$1" total="$2"
-    local filled=$((current * PROGRESS_BAR_WIDTH / total))
-    local empty=$((PROGRESS_BAR_WIDTH - filled))
-    local bar=""
-    for ((i=0; i<filled; i++)); do bar+="█"; done
-    for ((i=0; i<empty; i++)); do bar+="░"; done
-    printf "%s" "$bar"
-}
-
-trap 'echo -e "\n${YELLOW}Interrupted${RESET}\n"; exit 130' INT
+trap 'echo "Interrupted"; exit 130' INT
 
 # Collect features (exclude masterplan.md)
 shopt -s nullglob
@@ -92,9 +60,7 @@ for f in "${all_md[@]}"; do
 done
 
 if [ ${#features[@]} -eq 0 ]; then
-    show_banner
-    echo -e "  ${RED}✗${RESET} No feature .md files in ${WHITE}lisa-flow/harness/${RESET}"
-    echo ""
+    echo "Error: No feature .md files in lisa-flow/harness/"
     exit 1
 fi
 
@@ -112,14 +78,9 @@ declare -a FEATURE_TIMES=()
 # Main
 SECONDS=0
 
-show_banner
-
-display_log="$LOG_FILE"
-[ "${#LOG_FILE}" -gt "$MAX_LOG_LEN" ] && display_log="...${LOG_FILE: -$MAX_LOG_LEN}"
-
-log "  Features       ${WHITE}${#features[@]}${RESET}"
-log "  Test Retries   ${WHITE}$MAX_RETRIES${RESET}"
-log "  Log            ${DIM}$display_log${RESET}"
+log "Features: ${#features[@]}"
+log "Retries:  $MAX_RETRIES"
+log "Log:      $LOG_FILE"
 log ""
 
 # Process each feature
@@ -132,10 +93,7 @@ for feature_file in "${features[@]}"; do
     name=$(basename "$feature_file" .md)
     FEATURE_NAMES+=("$name")
 
-    display_name="$name"
-    [ "${#name}" -gt "$MAX_FEATURE_LEN" ] && display_name="${name:0:$MAX_FEATURE_LEN}..."
-
-    log "${DIM}[${GREEN}$(progress_bar "$current" "$TOTAL")${DIM}]${RESET} ${current}/${TOTAL} ${YELLOW}$display_name${RESET}"
+    log "[$current/$TOTAL] $name"
 
     start=$SECONDS
     exit_code=0
@@ -153,7 +111,7 @@ for feature_file in "${features[@]}"; do
     "$LISA_FLOW" "$flow_input" "$MAX_RETRIES" >> "$LOG_FILE" 2>&1 || exit_code=$?
 
     if [ "$exit_code" -ne 0 ]; then
-        log "  ${CYAN}↻${RESET} Retrying $display_name"
+        log "  Retrying $name"
         exit_code=0
         "$LISA_FLOW" "$flow_input" "$MAX_RETRIES" >> "$LOG_FILE" 2>&1 || exit_code=$?
     fi
@@ -168,17 +126,17 @@ for feature_file in "${features[@]}"; do
     if [ "$exit_code" -eq 0 ]; then
         FEATURE_RESULTS+=("PASS")
         pass_count=$((pass_count + 1))
-        log "${GREEN}✓${RESET} $display_name ${DIM}($(format_time "$elapsed"))${RESET}"
+        log "  PASS ($( format_time "$elapsed" ))"
     else
         FEATURE_RESULTS+=("FAIL")
         fail_count=$((fail_count + 1))
-        log "${RED}✗${RESET} $display_name ${DIM}($(format_time "$elapsed"))${RESET}"
+        log "  FAIL ($( format_time "$elapsed" ))"
     fi
     log ""
 done
 
 # Final integration pass
-log "${DIM}[${GREEN}$(progress_bar "$TOTAL" "$TOTAL")${DIM}]${RESET} ${TOTAL}/${TOTAL} ${YELLOW}INTEGRATION${RESET}"
+log "[$TOTAL/$TOTAL] INTEGRATION"
 
 INTEGRATION_PROMPT="You are running a final integration check across the entire project.
 Multiple features were just built independently. Your job:
@@ -195,7 +153,7 @@ iteration=0
 
 while [ "$iteration" -lt "$MAX_RETRIES" ]; do
     iteration=$((iteration + 1))
-    log "  ${CYAN}↻${RESET} Attempt $iteration/$MAX_RETRIES"
+    log "  Attempt $iteration/$MAX_RETRIES"
     RESULT=$(claude -p --dangerously-skip-permissions "$INTEGRATION_PROMPT" 2>&1)
     printf '%s\n' "$RESULT" >> "$LOG_FILE"
     if printf '%s' "$RESULT" | grep -q "ALL_TESTS_PASS"; then
@@ -205,55 +163,34 @@ while [ "$iteration" -lt "$MAX_RETRIES" ]; do
 done
 
 integration_elapsed=$((SECONDS - integration_start))
-
-if [ "$integration_result" = "PASS" ]; then
-    log "${GREEN}✓${RESET} INTEGRATION ${DIM}($(format_time "$integration_elapsed"))${RESET}"
-else
-    log "${RED}✗${RESET} INTEGRATION ${DIM}($(format_time "$integration_elapsed"))${RESET}"
-fi
+log "  $integration_result ($(format_time "$integration_elapsed"))"
 
 # Summary
 total_time=$SECONDS
 log ""
-log "${DIM}─────────────────────────────────────────────${RESET}"
+log "---------------------------------------------"
 log ""
 
 for i in "${!FEATURE_NAMES[@]}"; do
     name="${FEATURE_NAMES[$i]}"
     result="${FEATURE_RESULTS[$i]}"
     time="${FEATURE_TIMES[$i]}"
-    display_name="$name"
-    [ "${#name}" -gt 20 ] && display_name="${name:0:20}..."
-
-    if [ "$result" = "PASS" ]; then
-        icon="${GREEN}✓${RESET}"
-    else
-        icon="${RED}✗${RESET}"
-    fi
-    log "  $icon $(printf '%-24s' "$display_name") $(printf '%6s' "$result") $(printf '%12s' "$(format_time "$time")")"
+    log "  $(printf '%-24s' "$name") $(printf '%6s' "$result") $(printf '%12s' "$(format_time "$time")")"
 done
 
-# Integration row
-if [ "$integration_result" = "PASS" ]; then
-    icon="${GREEN}✓${RESET}"
-else
-    icon="${RED}✗${RESET}"
-fi
-log "  $icon $(printf '%-24s' "INTEGRATION") $(printf '%6s' "$integration_result") $(printf '%12s' "$(format_time "$integration_elapsed")")"
+log "  $(printf '%-24s' "INTEGRATION") $(printf '%6s' "$integration_result") $(printf '%12s' "$(format_time "$integration_elapsed")")"
 
 log ""
-log "${DIM}─────────────────────────────────────────────${RESET}"
+log "---------------------------------------------"
 
 if [ "$fail_count" -eq 0 ] && [ "$integration_result" = "PASS" ]; then
-    log "  ${GREEN}SUCCESS${RESET}  ${pass_count}/${#features[@]} features  Total: $(format_time "$total_time")"
-    log ""
-    log "${DIM}Log: $LOG_FILE${RESET}"
+    log "SUCCESS  ${pass_count}/${#features[@]} features  Total: $(format_time "$total_time")"
+    log "Log: $LOG_FILE"
     log ""
     exit 0
 else
-    log "  ${RED}FAILED${RESET}   ${pass_count}/${#features[@]} features  Total: $(format_time "$total_time")"
-    log ""
-    log "${DIM}Log: $LOG_FILE${RESET}"
+    log "FAILED   ${pass_count}/${#features[@]} features  Total: $(format_time "$total_time")"
+    log "Log: $LOG_FILE"
     log ""
     exit 1
 fi
