@@ -26,7 +26,7 @@ lisa.sh (orchestrator)  →  flow.sh (worker)  →  claude CLI (AI)
 
 ### Enable Agent Teams
 
-Lisa Flow uses [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams) to parallelize work in the PLAN, IMPLEMENT, and TEST phases. Agent teams are experimental and disabled by default.
+Lisa Flow uses [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams) and [subagents](https://code.claude.com/docs/en/sub-agents) to parallelize work. Agent teams are experimental and disabled by default.
 
 Add this to your `~/.claude/settings.json`:
 
@@ -88,15 +88,21 @@ Each feature goes through 5 phases inside `flow.sh`:
 SPECIFY → PLAN → TASKS → IMPLEMENT → TEST
 ```
 
-| Phase | What it does |
-|-------|-------------|
-| **SPECIFY** | Generates a spec from the feature description |
-| **PLAN** | Researches and designs the implementation (agent teams parallelize research) |
-| **TASKS** | Breaks the plan into ordered tasks |
-| **IMPLEMENT** | Writes the code (agent teams parallelize independent tasks) |
-| **TEST** | Self-healing loop — runs tests, fixes failures, checks code quality/security/perf (agent teams parallelize checks) |
+| Phase | What it does | Parallelism |
+|-------|-------------|-------------|
+| **SPECIFY** | Generates a spec from the feature description | Single session |
+| **PLAN** | Researches and designs the implementation | Subagents |
+| **TASKS** | Breaks the plan into ordered tasks | Single session |
+| **IMPLEMENT** | Writes the code | Agent team |
+| **TEST** | Self-healing loop — runs tests, fixes failures, checks quality/security/perf | Subagents |
 
-After all features complete, `lisa.sh` runs a **final integration pass** that tests everything together and fixes cross-feature conflicts.
+After all features complete, `lisa.sh` runs a **final integration pass** using an **agent team** to test everything together and fix cross-feature conflicts.
+
+### Why subagents vs agent teams?
+
+**[Subagents](https://code.claude.com/docs/en/sub-agents)** are lightweight — they do independent work and report results back. Used for PLAN (parallel research) and TEST (parallel checks) where each task is self-contained and workers don't need to talk to each other. Lower token cost.
+
+**[Agent teams](https://code.claude.com/docs/en/agent-teams)** are full Claude instances that coordinate with each other in real time. Used for IMPLEMENT (teammates own different files and need to avoid conflicts) and INTEGRATION (cross-feature fixes may affect the same files). Higher token cost, but worth it when coordination matters.
 
 ## How It Works
 
