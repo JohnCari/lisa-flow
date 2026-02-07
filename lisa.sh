@@ -51,7 +51,6 @@ fi
 
 LISA_FLOW="$SCRIPT_DIR/flow.sh"
 LOG_DIR="$SCRIPT_DIR/logs"
-mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/orchestrator_$(date +%Y-%m-%d_%H-%M-%S).log"
 
 TZ="${TZ:-America/New_York}"

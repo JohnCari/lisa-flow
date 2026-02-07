@@ -37,7 +37,6 @@ FEATURE=$(resolve_feature_input "$FEATURE_INPUT") || exit 1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
-mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/lisa-flow_$(date +%Y-%m-%d_%H-%M-%S).log"
 
 find "$LOG_DIR" -name "lisa-flow_*.log" -type f -mtime +"$LOG_RETENTION_DAYS" -delete 2>/dev/null || true
