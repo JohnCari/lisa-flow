@@ -5,7 +5,6 @@
 set -euo pipefail
 
 readonly PROGRESS_BAR_WIDTH=30
-readonly LOG_RETENTION_DAYS=7
 readonly SPEC_DIR_REL="../specs"  # Relative to script directory
 
 FEATURE_INPUT="${1:-}"
@@ -37,12 +36,8 @@ FEATURE=$(resolve_feature_input "$FEATURE_INPUT") || exit 1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
-LOG_FILE="$LOG_DIR/lisa-flow_$(date +%Y-%m-%d_%H-%M-%S).log"
-
-find "$LOG_DIR" -name "lisa-flow_*.log" -type f -mtime +"$LOG_RETENTION_DAYS" -delete 2>/dev/null || true
-
-TZ="${TZ:-America/New_York}"
-export TZ
+NEXT_NUM=$(printf '%03d' "$(( $(ls "$LOG_DIR"/lisa-flow_*.log 2>/dev/null | wc -l) + 1 ))")
+LOG_FILE="$LOG_DIR/lisa-flow_${NEXT_NUM}.log"
 
 TOTAL_PHASES=5
 declare -a PHASE_TIMES=()

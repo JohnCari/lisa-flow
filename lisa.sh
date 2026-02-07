@@ -51,10 +51,9 @@ fi
 
 LISA_FLOW="$SCRIPT_DIR/flow.sh"
 LOG_DIR="$SCRIPT_DIR/logs"
-LOG_FILE="$LOG_DIR/orchestrator_$(date +%Y-%m-%d_%H-%M-%S).log"
-
-TZ="${TZ:-America/New_York}"
-export TZ
+rm -f "$LOG_DIR/.gitkeep"
+NEXT_NUM=$(printf '%03d' "$(( $(ls "$LOG_DIR"/orchestrator_*.log 2>/dev/null | wc -l) + 1 ))")
+LOG_FILE="$LOG_DIR/orchestrator_${NEXT_NUM}.log"
 
 log() { echo -e "$1" | tee -a "$LOG_FILE"; }
 
