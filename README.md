@@ -66,13 +66,19 @@ The `harness/` directory lives inside `lisa-flow/`:
 ```
 lisa-flow/
 ├── harness/
-│   ├── masterplan.md       # optional big-picture context, prepended to every feature
-│   ├── 001-auth.md         # features, processed in filename order
-│   └── 002-dashboard.md
+│   ├── masterplan.md       # big picture (read below)
+│   ├── 001-step.md         # steps, processed in order
+│   └── 002-step.md
 ├── lisa.sh                 # orchestrator (run this)
 ├── flow.sh                 # worker (called by lisa.sh)
 └── logs/
 ```
+
+### masterplan.md vs step files
+
+**`masterplan.md`** is the big picture — project-wide context, constraints, and architecture decisions. It gets prepended to every step automatically. Write it once, it applies everywhere. Think of it as the brief that every step reads before starting work.
+
+**`001-step.md`, `002-step.md`, ...** are the actual work. Each file describes one feature or step to build. They are processed in filename order. Keep each step focused — one feature per file. The numbered prefix controls execution order.
 
 ## Phases
 
