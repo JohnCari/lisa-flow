@@ -31,7 +31,8 @@ FEATURE=$(resolve_feature_input "$FEATURE_INPUT") || exit 1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
-NEXT_NUM=$(printf '%03d' "$(( $(ls "$LOG_DIR"/lisa-flow_*.log 2>/dev/null | wc -l) + 1 ))")
+LAST_NUM=$(ls "$LOG_DIR"/lisa-flow_*.log 2>/dev/null | sed 's/.*lisa-flow_\([0-9]*\)\.log/\1/' | sort -n | tail -1)
+NEXT_NUM=$(printf '%03d' "$(( ${LAST_NUM:-0} + 1 ))")
 LOG_FILE="$LOG_DIR/lisa-flow_${NEXT_NUM}.log"
 
 TOTAL_PHASES=5
