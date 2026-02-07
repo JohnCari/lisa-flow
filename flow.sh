@@ -1,11 +1,9 @@
 #!/bin/bash
 # shellcheck shell=bash
-# lisa-flow.sh - Structured Spec Kit workflow + Ralph-style self-healing test loop
+# flow.sh - Worker: Structured Spec Kit workflow + Ralph-style self-healing test loop
 
 set -euo pipefail
 
-readonly MAX_FEATURE_LEN=50
-readonly MAX_LOG_LEN=40
 readonly PROGRESS_BAR_WIDTH=30
 readonly LOG_RETENTION_DAYS=7
 readonly SPEC_DIR_REL="../specs"  # Relative to script directory
@@ -17,22 +15,8 @@ MAX_TEST_ITERATIONS="${2:-5}"
 GREEN='\033[0;32m' RED='\033[0;31m' YELLOW='\033[1;33m' CYAN='\033[0;36m' WHITE='\033[1;37m' DIM='\033[2m' RESET='\033[0m'
 ORANGE='\033[38;5;202m'
 
-show_banner() {
-    echo ""
-    echo -e "${YELLOW}██${ORANGE}╗     ${YELLOW}██${ORANGE}╗${YELLOW}███████${ORANGE}╗ ${YELLOW}█████${ORANGE}╗       ${YELLOW}███████${ORANGE}╗${YELLOW}██${ORANGE}╗      ${YELLOW}██████${ORANGE}╗ ${YELLOW}██${ORANGE}╗    ${YELLOW}██${ORANGE}╗${RESET}"
-    echo -e "${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}╔════╝${YELLOW}██${ORANGE}╔══${YELLOW}██${ORANGE}╗      ${YELLOW}██${ORANGE}╔════╝${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}╔═══${YELLOW}██${ORANGE}╗${YELLOW}██${ORANGE}║    ${YELLOW}██${ORANGE}║${RESET}"
-    echo -e "${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║${YELLOW}███████${ORANGE}╗${YELLOW}███████${ORANGE}║${WHITE}█████${ORANGE}╗${YELLOW}█████${ORANGE}╗  ${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║   ${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}║ ${YELLOW}█${ORANGE}╗ ${YELLOW}██${ORANGE}║${RESET}"
-    echo -e "${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║╚════${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}╔══${YELLOW}██${ORANGE}║╚════╝${YELLOW}██${ORANGE}╔══╝  ${YELLOW}██${ORANGE}║     ${YELLOW}██${ORANGE}║   ${YELLOW}██${ORANGE}║${YELLOW}██${ORANGE}║${YELLOW}███${ORANGE}╗${YELLOW}██${ORANGE}║${RESET}"
-    echo -e "${YELLOW}███████${ORANGE}╗${YELLOW}██${ORANGE}║${YELLOW}███████${ORANGE}║${YELLOW}██${ORANGE}║  ${YELLOW}██${ORANGE}║      ${YELLOW}██${ORANGE}║     ${YELLOW}███████${ORANGE}╗╚${YELLOW}██████${ORANGE}╔╝╚${YELLOW}███${ORANGE}╔${YELLOW}███${ORANGE}╔╝${RESET}"
-    echo -e "${ORANGE}╚══════╝╚═╝╚══════╝╚═╝  ╚═╝      ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝${RESET}"
-    echo ""
-}
-
 if [ -z "$FEATURE_INPUT" ]; then
-    show_banner
-    echo -e "  Usage: ./lisa-flow.sh ${YELLOW}<feature>${RESET} ${DIM}[retries]${RESET}"
-    echo -e "         feature: text or @file"
-    echo ""
+    echo "Error: FEATURE_INPUT is required" >&2
     exit 1
 fi
 
@@ -152,18 +136,6 @@ PROMPT_IMPLEMENT="/speckit.implement Use agent teams to parallelize: create a te
 
 # Main
 SECONDS=0
-
-show_banner
-
-display_feature="$FEATURE"
-[ "${#FEATURE}" -gt "$MAX_FEATURE_LEN" ] && display_feature="${FEATURE:0:$MAX_FEATURE_LEN}..."
-display_log="$LOG_FILE"
-[ "${#LOG_FILE}" -gt "$MAX_LOG_LEN" ] && display_log="...${LOG_FILE: -$MAX_LOG_LEN}"
-
-log "  Feature        ${WHITE}$display_feature${RESET}"
-log "  Test Retries   ${WHITE}$MAX_TEST_ITERATIONS${RESET}"
-log "  Log            ${DIM}$display_log${RESET}"
-log ""
 
 run_phase 1 "SPECIFY" claude -p --dangerously-skip-permissions "$PROMPT_SPECIFY"
 run_phase 2 "PLAN" claude -p --dangerously-skip-permissions "$PROMPT_PLAN"

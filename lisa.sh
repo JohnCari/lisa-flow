@@ -5,8 +5,10 @@
 
 set -euo pipefail
 
-readonly HARNESS_DIR="harness"
-readonly MASTER_PLAN="harness/masterplan.md"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+readonly HARNESS_DIR="$SCRIPT_DIR/harness"
+readonly MASTER_PLAN="$SCRIPT_DIR/harness/masterplan.md"
 readonly MAX_FEATURE_LEN=50
 readonly MAX_LOG_LEN=40
 readonly PROGRESS_BAR_WIDTH=30
@@ -33,21 +35,20 @@ show_banner() {
 
 if [ ! -d "$HARNESS_DIR" ]; then
     show_banner
-    echo -e "  ${RED}✗${RESET} No ${WHITE}${HARNESS_DIR}/${RESET} directory found"
+    echo -e "  ${RED}✗${RESET} No ${WHITE}harness/${RESET} directory found in lisa-flow/"
     echo ""
     echo -e "  Create it with numbered .md files:"
-    echo -e "    ${DIM}mkdir harness${RESET}"
-    echo -e "    ${DIM}echo \"Build auth API\" > harness/001-auth.md${RESET}"
-    echo -e "    ${DIM}echo \"Build dashboard\" > harness/002-dashboard.md${RESET}"
+    echo -e "    ${DIM}mkdir lisa-flow/harness${RESET}"
+    echo -e "    ${DIM}echo \"Build auth API\" > lisa-flow/harness/001-auth.md${RESET}"
+    echo -e "    ${DIM}echo \"Build dashboard\" > lisa-flow/harness/002-dashboard.md${RESET}"
     echo ""
-    echo -e "  Usage: lisa-flow/lisa-orchestrator.sh ${DIM}[retries]${RESET}"
+    echo -e "  Usage: lisa-flow/lisa.sh ${DIM}[retries]${RESET}"
     echo ""
     exit 1
 fi
 
 [[ "$MAX_RETRIES" =~ ^[1-9][0-9]*$ ]] || { echo "Error: retries must be a positive integer"; exit 1; }
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LISA_FLOW="$SCRIPT_DIR/flow.sh"
 LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
@@ -94,7 +95,7 @@ done
 
 if [ ${#features[@]} -eq 0 ]; then
     show_banner
-    echo -e "  ${RED}✗${RESET} No feature .md files in ${WHITE}${HARNESS_DIR}/${RESET}"
+    echo -e "  ${RED}✗${RESET} No feature .md files in ${WHITE}lisa-flow/harness/${RESET}"
     echo ""
     exit 1
 fi
