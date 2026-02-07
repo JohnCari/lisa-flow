@@ -110,7 +110,7 @@ find_tasks_file() {
 
 # Prompts
 PROMPT_SPECIFY="/speckit.specify $FEATURE. Include comprehensive tests following Test Driven Development. $CONTEXT7"
-PROMPT_PLAN="/speckit.plan Create an agent team to research this feature. Spawn teammates with distinct roles: one for API and data layer research, one for architecture patterns and dependencies, one for testing strategy. Each teammate investigates their area independently. Wait for all teammates to finish before synthesizing findings into the plan. Clean up the team when done. $CONTEXT7"
+PROMPT_PLAN="/speckit.plan Use subagents to research this feature in parallel: one for API and data layer research, one for architecture patterns and dependencies, one for testing strategy. Synthesize all findings into the plan. $CONTEXT7"
 PROMPT_TASKS="/speckit.tasks"
 PROMPT_IMPLEMENT="/speckit.implement Create an agent team to implement this feature. Break the work into independent tasks and spawn teammates, each owning a different set of files to avoid conflicts. Aim for 5-6 tasks per teammate. For frontend/UI components, use /frontend-design to ensure high design quality. Wait for all teammates to finish before proceeding. Clean up the team when done. $CONTEXT7"
 
@@ -125,12 +125,12 @@ TASKS_FILE=$(find_tasks_file)
 [ -z "$TASKS_FILE" ] && { log "Error: No tasks.md found after TASKS phase"; exit 1; }
 printf '%s\n' "Using tasks file: $TASKS_FILE" >> "$LOG_FILE"
 
-PROMPT_TEST="Read $TASKS_FILE. Create an agent team with 4 teammates to validate this feature:
-1. Test runner teammate: run all tests, fix failures in implementation only (don't modify tests)
-2. Code quality teammate: fix bugs, dead code, magic numbers, code smells
-3. Security teammate: check and fix OWASP vulnerabilities
-4. Performance teammate: fix inefficiencies
-Each teammate owns their domain. Wait for all teammates to finish. Synthesize results and output ALL_TESTS_PASS when all checks pass or TESTS_FAILED if stuck. Clean up the team when done. $CONTEXT7"
+PROMPT_TEST="Read $TASKS_FILE. Use subagents to validate this feature in parallel:
+1. Run all tests, fix failures in implementation only (don't modify tests)
+2. Fix bugs, dead code, magic numbers, code smells
+3. Check and fix OWASP vulnerabilities
+4. Fix performance inefficiencies
+Synthesize all results and output ALL_TESTS_PASS when all checks pass or TESTS_FAILED if stuck. $CONTEXT7"
 
 run_phase 4 "IMPLEMENT" claude -p --dangerously-skip-permissions "$PROMPT_IMPLEMENT"
 
