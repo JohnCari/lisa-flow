@@ -115,6 +115,15 @@ After all features complete, `lisa.sh` runs a **final integration pass** using a
 
 The entire pipeline is fully autonomous — no human approval prompts, no interaction needed.
 
+## Logs
+
+Logs are in `lisa-flow/logs/`:
+
+- **`lisa_001.log`** — orchestrator log (feature results, integration, summary)
+- **`flow_001.log`** — worker log (phase-by-phase detail, full claude output)
+
+Numbers increment automatically. When something fails, the log says what failed, the exit code, and points to the log file for full output. Check the flow log for phase-level errors, the lisa log for feature-level results.
+
 ## License
 
 CC0 - Public Domain

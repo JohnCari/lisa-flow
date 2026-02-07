@@ -112,7 +112,7 @@ for feature_file in "${features[@]}"; do
     "$LISA_FLOW" "$flow_input" "$MAX_RETRIES" >> "$LOG_FILE" 2>&1 || exit_code=$?
 
     if [ "$exit_code" -ne 0 ]; then
-        log "  Retrying $name"
+        log "  ERROR exit=$exit_code, retrying $name"
         exit_code=0
         "$LISA_FLOW" "$flow_input" "$MAX_RETRIES" >> "$LOG_FILE" 2>&1 || exit_code=$?
     fi
@@ -131,7 +131,7 @@ for feature_file in "${features[@]}"; do
     else
         FEATURE_RESULTS+=("FAIL")
         fail_count=$((fail_count + 1))
-        log "  FAIL ($( format_time "$elapsed" ))"
+        log "  FAIL exit=$exit_code ($( format_time "$elapsed" )) — see $LOG_FILE"
     fi
     log ""
 done
@@ -162,7 +162,11 @@ while [ "$iteration" -lt "$MAX_RETRIES" ]; do
 done
 
 integration_elapsed=$((SECONDS - integration_start))
-log "  $integration_result ($(format_time "$integration_elapsed"))"
+if [ "$integration_result" = "FAIL" ]; then
+    log "  FAIL after $MAX_RETRIES attempts ($(format_time "$integration_elapsed")) — see $LOG_FILE"
+else
+    log "  PASS ($(format_time "$integration_elapsed"))"
+fi
 
 # Summary
 total_time=$SECONDS

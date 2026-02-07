@@ -42,7 +42,7 @@ declare -a PHASE_NAMES=("SPECIFY" "PLAN" "TASKS" "IMPLEMENT" "TEST")
 CONTEXT7="When using any library or framework, use Context7 MCP to get accurate docs: 1) mcp__context7__resolve-library-id with library name. 2) mcp__context7__query-docs with the ID and your specific question."
 
 PHASE="INIT"
-error_handler() { echo "Failed at: $PHASE (line $1)" | tee -a "$LOG_FILE"; }
+error_handler() { echo "ERROR $PHASE failed (line $1, exit $?)" | tee -a "$LOG_FILE"; }
 trap 'error_handler $LINENO' ERR
 trap 'echo "Interrupted"; exit 130' INT  # 128 + SIGINT(2)
 
@@ -87,7 +87,10 @@ run_phase() {
     local output
     output=$("${cmd[@]}" 2>&1) || exit_code=$?
     printf '%s\n' "$output" >> "$LOG_FILE"
-    if [ "$exit_code" -ne 0 ]; then printf '%s\n' "$output"; return "$exit_code"; fi
+    if [ "$exit_code" -ne 0 ]; then
+        log "  ERROR exit=$exit_code (see $LOG_FILE)"
+        return "$exit_code"
+    fi
     local elapsed=$((SECONDS - start))
     PHASE_TIMES[$num]=$elapsed
     log "  ok $(format_time "$elapsed")"
@@ -158,7 +161,7 @@ while [ "$iteration" -lt "$MAX_TEST_ITERATIONS" ]; do
     fi
 done
 
-printf '%s\n' "$RESULT"
+log "  ERROR TEST failed after $MAX_TEST_ITERATIONS attempts (see $LOG_FILE)"
 elapsed_test=$((SECONDS - START_TEST))
 PHASE_TIMES[$TOTAL_PHASES]=$elapsed_test
 elapsed=$SECONDS
