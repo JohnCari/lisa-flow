@@ -57,8 +57,8 @@ echo "Build auth API with JWT" > lisa-flow/harness/001-auth.md
 echo "Build user dashboard" > lisa-flow/harness/002-dashboard.md
 
 # 3. Run
-lisa-flow/lisa.sh           # default 5 retries
-lisa-flow/lisa.sh 10        # 10 retries per test phase
+lisa-flow/lisa.sh           # default 3 retries
+lisa-flow/lisa.sh 5         # 5 retries per test phase
 ```
 
 The `harness/` directory lives inside `lisa-flow/`:
