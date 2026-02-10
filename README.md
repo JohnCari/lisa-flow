@@ -13,14 +13,14 @@ Drop feature files in `queue/`, run `/maestro.artist`, walk away.
 │  /maestro.artist           │  │  /maestro.critic           │  │  /maestro.virtuoso         │
 │                            │  │                            │  │  (via ralph-loop)          │
 │  queue/ → agent team       │  │  1. run all tests          │  │                            │
-│    ├ SPECIFY               │  │  2. spawn 2 agents:        │  │  per iteration:            │
-│    ├ PLAN                  │  │     conflict-checker       │  │    ORIENT                  │
-│    ├ TASKS                 │  │     quality-sweep          │  │    ASSESS  (3 agents)      │
-│    ├ IMPLEMENT             │  │       ├ security           │  │    SELECT                  │
-│    └ TEST                  │  │       ├ code quality       │  │    IMPLEMENT (team)        │
+│    ├ SPECIFY (speckit)     │  │  2. spawn 2 agents:        │  │  per iteration:            │
+│    ├ PLAN   (speckit)      │  │     conflict-checker       │  │    ORIENT  (read all)      │
+│    ├ TASKS  (speckit)      │  │     quality-sweep          │  │    ASSESS  (3 agents)      │
+│    ├ IMPLEMENT (speckit)   │  │       ├ security           │  │    SELECT  (from plan)     │
+│    └ TEST   (up to 3x)    │  │       ├ code quality       │  │    IMPLEMENT (team)        │
 │                            │  │       └ performance        │  │    VALIDATE  (tests)       │
-│  sequential, retry once    │  │  3. final validation       │  │    COMMIT                  │
-│  agent teams orchestrated  │  │  self-healing, 3 attempts  │  │    UPDATE PLAN             │
+│  sequential per feature    │  │  3. final validation       │  │    COMMIT                  │
+│  one worker per feature    │  │  self-healing, 3 attempts  │  │    UPDATE PLAN             │
 │                            │  │                            │  │  ↻ loops for hours/days    │
 └────────────────────────────┘  └────────────────────────────┘  └────────────────────────────┘
 ```
@@ -32,10 +32,10 @@ Drop feature files in `queue/`, run `/maestro.artist`, walk away.
 /speckit.constitution
 
 # 2. In Claude Code plan mode, create your plan and save as masterplan.md
-#    Save to maestro/queue/masterplan.md
+#    Save to queue/masterplan.md
 
 # 3. In the same session, ask Claude to break the masterplan into features
-#    Creates NNN-name.md files in maestro/queue/
+#    Creates NNN-name.md files in queue/
 #    e.g. 001-auth.md, 002-dashboard.md, 003-settings.md
 
 # 4. Build (autonomous — walk away)
@@ -49,11 +49,11 @@ claude --dangerously-skip-permissions
 /ralph-loop "/maestro.virtuoso" --completion-promise "ALL_IMPROVEMENTS_COMPLETE"
 ```
 
-**Phase 1 — Artist:** `/maestro.artist` creates an agent team and processes each feature through SPECIFY → PLAN → TASKS → IMPLEMENT → TEST. Failed features retry once. Each worker gets a fresh context window.
+**Phase 1 — Artist:** `/maestro.artist` reads `queue/*.md` files in order, creates a `maestro-build` agent team, and spawns one worker per feature. Each worker runs 5 Spec Kit phases sequentially: `speckit.specify` → `speckit.plan` (with parallel research subagents) → `speckit.tasks` → `speckit.implement` (with parallel implementation subagents) → TEST. Workers use Context7 MCP for accurate library docs. Tests retry up to 3 times (configurable). If a feature fails, a fresh retry worker is spawned. `masterplan.md` is prepended to every feature for shared context.
 
-**Phase 2 — Critic:** `/maestro.critic` spawns a conflict-checker + quality-sweep team to catch cross-feature issues (duplicate routes, security, perf). Self-healing, up to 3 attempts.
+**Phase 2 — Critic:** `/maestro.critic` runs the full test suite first to establish a clean baseline, then spawns a `reviewer` agent team with 2 teammates: a **conflict-checker** (finds cross-feature conflicts: duplicate routes, naming collisions, circular imports, conflicting state, inconsistent schemas) and a **quality-sweep** (sequential deep scan: security per OWASP Top 10, code quality, performance). Both teammates fix issues they find. Final validation re-runs all tests. Self-healing: if validation fails, the entire team is recreated — up to 3 total attempts.
 
-**Phase 3 — Virtuoso:** `/maestro.virtuoso` runs inside a Ralph Loop. Each iteration reads all artifacts, picks improvements from `IMPROVEMENT_PLAN.md`, implements with agent teams, validates, commits, exits — loop restarts with fresh context.
+**Phase 3 — Virtuoso:** `/maestro.virtuoso` runs inside a Ralph Loop for continuous improvement. Each iteration: **ORIENT** (reads constitution, CLAUDE.md, IMPROVEMENT_PLAN.md, speckit artifacts, git history, codebase) → **ASSESS** (spawns 3 read-only agents: code-analyst, test-analyst, quality-analyst — constitution violations are auto-Critical) → **SELECT** (picks highest-priority parallel batch from plan) → **IMPLEMENT** (agent team with file-ownership boundaries, no overlap) → **VALIDATE** (single-agent backpressure: full test suite, typecheck, lint, constitution gates, up to 3 self-healing attempts) → **COMMIT** → **UPDATE PLAN**. `IMPROVEMENT_PLAN.md` is shared state between iterations. Exits with `ALL_IMPROVEMENTS_COMPLETE` only when genuinely done.
 
 ## Setup
 
