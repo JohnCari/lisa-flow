@@ -7,20 +7,20 @@ Drop feature files in `queue/`, run `/maestro.artist`, walk away.
 ## Architecture
 
 ```
-  PHASE 1: CREATE          PHASE 2: CRITIQUE        PHASE 3: PERFECT
- ┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
- │  /maestro.artist  │     │  /maestro.critic  │     │ /maestro.virtuoso│
- │                   │     │                   │     │  (ralph-loop)    │
- │  queue/ → team    │     │  1. run tests     │     │                  │
- │    SPECIFY        │     │  2. spawn 2:      │     │  ORIENT          │
- │    PLAN           │     │     conflict ck.  │     │  ASSESS (3)      │
- │    TASKS          │     │     quality sweep │     │  SELECT          │
- │    IMPLEMENT      │     │       security    │     │  IMPLEMENT       │
- │    TEST (3x)      │     │       quality     │     │  VALIDATE        │
- │                   │     │       perf        │     │  COMMIT          │
- │  1 worker/feature │     │  3. validate      │     │  UPDATE PLAN     │
- │  sequential       │     │  self-heals (3x)  │     │  ↻ loops         │
- └──────────────────┘     └──────────────────┘     └──────────────────┘
+    PHASE 1: CREATE        PHASE 2: CRITIQUE       PHASE 3: PERFECT
+┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
+│  /maestro.artist   │  │  /maestro.critic   │  │  /maestro.virtuoso │
+│                    │  │                    │  │   (ralph-loop)     │
+│  queue/ → team     │  │  1. run tests      │  │                    │
+│    SPECIFY         │  │  2. spawn 2:       │  │  ORIENT            │
+│    PLAN            │  │     conflict ck.   │  │  ASSESS (3)        │
+│    TASKS           │  │     quality sweep  │  │  SELECT            │
+│    IMPLEMENT       │  │       security     │  │  IMPLEMENT         │
+│    TEST (3x)       │  │       quality      │  │  VALIDATE          │
+│                    │  │       perf         │  │  COMMIT            │
+│  1 worker/feature  │  │  3. validate       │  │  UPDATE PLAN       │
+│  sequential        │  │  self-heals (3x)   │  │  ↻ loops           │
+└────────────────────┘  └────────────────────┘  └────────────────────┘
 ```
 
 ## Quick Start
