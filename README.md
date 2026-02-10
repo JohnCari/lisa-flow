@@ -7,27 +7,27 @@ Drop feature files in `queue/`, run `/maestro.artist`, walk away.
 ## Architecture
 
 ```
-    PHASE 1: CREATE        PHASE 2: CRITIQUE       PHASE 3: PERFECT
-┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
-│  /maestro.artist   │  │  /maestro.critic   │  │  /maestro.virtuoso │
-│                    │  │                    │  │   (ralph-loop)     │
-│  queue/ → team     │  │  1. run tests      │  │                    │
-│    SPECIFY         │  │  2. spawn 2:       │  │  ORIENT            │
-│    PLAN            │  │     conflict ck.   │  │  ASSESS (3)        │
-│    TASKS           │  │     quality sweep  │  │  SELECT            │
-│    IMPLEMENT       │  │       security     │  │  IMPLEMENT         │
-│    TEST (3x)       │  │       quality      │  │  VALIDATE          │
-│                    │  │       perf         │  │  COMMIT            │
-│  1 worker/feature  │  │  3. validate       │  │  UPDATE PLAN       │
-│  sequential        │  │  self-heals (3x)   │  │  ↻ loops           │
-└────────────────────┘  └────────────────────┘  └────────────────────┘
+   PHASE 0: SETUP        PHASE 1: CREATE        PHASE 2: CRITIQUE       PHASE 3: PERFECT
+┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
+│  /maestro.tuner    │  │  /maestro.artist   │  │  /maestro.critic   │  │  /maestro.virtuoso │
+│                    │  │                    │  │                    │  │   (ralph-loop)     │
+│  1. COMPOSE        │  │  queue/ → team     │  │  1. run tests      │  │                    │
+│     constitution   │  │    SPECIFY         │  │  2. spawn 2:       │  │  ORIENT            │
+│     principles     │  │    PLAN            │  │     conflict ck.   │  │  ASSESS (3)        │
+│     standards      │  │    TASKS           │  │     quality sweep  │  │  SELECT            │
+│                    │  │    IMPLEMENT       │  │       security     │  │  IMPLEMENT         │
+│  2. TUNE           │  │    TEST (3x)       │  │       quality      │  │  VALIDATE          │
+│     install deps   │  │                    │  │       perf         │  │  COMMIT            │
+│     folder struct  │  │  1 worker/feature  │  │  3. validate       │  │  UPDATE PLAN       │
+│     configure      │  │  sequential        │  │  self-heals (3x)   │  │  ↻ loops           │
+└────────────────────┘  └────────────────────┘  └────────────────────┘  └────────────────────┘
 ```
 
 ## Quick Start
 
 ```bash
-# 1. Set up your project constitution (principles, quality gates)
-/speckit.constitution
+# 1. Foundation (constitution + project setup)
+/maestro.tuner "Next.js 15, TypeScript, Tailwind, Prisma, PostgreSQL"
 
 # 2. In Claude Code plan mode, create your plan and save as masterplan.md
 #    Save to queue/masterplan.md
@@ -48,6 +48,22 @@ claude --dangerously-skip-permissions
 ```
 
 ---
+
+### Phase 0 — Tuner
+
+`/maestro.tuner` sets up the project foundation before any features are built. Takes an optional setup prompt describing your stack.
+
+Two internal phases:
+
+1. **COMPOSE** — invokes `speckit.constitution` to define the project's governing document: principles, tools, dependencies, languages, design patterns, testing standards, security requirements, and quality gates
+2. **TUNE** — spawns a worker agent that reads the constitution and setup prompt, then:
+   - Installs all dependencies
+   - Creates the folder structure per architecture standards
+   - Configures linting, formatting, and testing tools
+   - Creates `CLAUDE.md` with build/test/lint commands
+   - Validates the setup (build, lint, and test runner all pass)
+
+Self-healing: up to 2 retries if validation fails.
 
 ### Phase 1 — Artist
 
@@ -112,6 +128,7 @@ Both teammates fix issues they find. Final validation re-runs all tests. Self-he
 7. Install:
    ```bash
    git clone https://github.com/JohnCari/maestro-framework.git maestro
+   cp maestro/maestro.tuner.md .claude/commands/maestro.tuner.md
    cp maestro/maestro.artist.md .claude/commands/maestro.artist.md
    cp maestro/maestro.critic.md .claude/commands/maestro.critic.md
    cp maestro/maestro.virtuoso.md .claude/commands/maestro.virtuoso.md
