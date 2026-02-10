@@ -45,9 +45,7 @@ Set up the project environment based on the constitution and the user's setup pr
 
 4. Wait for the worker to finish. Check output for `SETUP_PASS` or `SETUP_FAILED`.
 
-5. **If failed**: spawn a fresh retry worker with the same prompt. Maximum **3 retries**.
-
-6. Shut down the worker.
+5. Shut down the worker.
 
 ### 3. RESULT
 

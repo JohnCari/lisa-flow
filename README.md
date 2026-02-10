@@ -63,7 +63,7 @@ Two internal phases:
    - Creates `CLAUDE.md` with build/test/lint commands
    - Validates the setup (build, lint, and test runner all pass)
 
-Self-healing: up to 3 retries if validation fails.
+The worker self-heals internally — if validation fails, it fixes the issue and re-runs before reporting.
 
 ### Phase 1 — Artist
 
