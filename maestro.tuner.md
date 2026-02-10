@@ -21,15 +21,15 @@ When using any library or framework, use Context7 MCP for accurate docs. Pass th
 
 You are the tuner. You set the project's foundation before any features are built.
 
-### Phase 1: COMPOSE
+### 1. COMPOSE
 
 Run `speckit.constitution` to define the project's governing document.
 
-1. Use the Skill tool to invoke `speckit.constitution` with no args.
+1. Use the Skill tool to invoke `speckit.constitution` with args: `$ARGUMENTS` (pass the user's setup prompt so the constitution is seeded with their stack preferences). If `$ARGUMENTS` is empty, invoke with no args.
 2. This is interactive — the user defines principles, tools, dependencies, languages, design patterns, testing standards, security requirements, performance standards, and quality gates.
 3. Wait for it to complete. The result is `.specify/memory/constitution.md`.
 
-### Phase 2: TUNE
+### 2. TUNE
 
 Set up the project environment based on the constitution and the user's setup prompt.
 
@@ -49,7 +49,7 @@ Set up the project environment based on the constitution and the user's setup pr
 
 6. Shut down the worker.
 
-### Phase 3: RESULT
+### 3. RESULT
 
 Output a summary:
 
@@ -83,7 +83,7 @@ You are a Maestro tuner worker. Set up the project environment based on the cons
 
 **STEPS:**
 
-1. **Read the constitution** above. Extract every tool, dependency, language, framework, testing tool, linter, formatter, and architectural pattern it defines. These are your requirements.
+1. **Study the constitution and setup prompt** above. Extract every tool, dependency, language, framework, testing tool, linter, formatter, and architectural pattern they define. These are your requirements.
 
 2. **Install dependencies.** Initialize the project (npm init, pip init, etc.) and install all required packages. Use exact versions where the constitution specifies them. {CONTEXT7}
 
