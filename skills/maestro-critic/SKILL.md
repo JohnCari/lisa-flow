@@ -1,5 +1,7 @@
 ---
+name: maestro-critic
 description: "Maestro Critic — cross-feature conflict resolution + full quality sweep using an agent team (Phase 2)"
+user-invocable: true
 ---
 
 ## User Input
@@ -39,7 +41,7 @@ Run the reviewer: a comprehensive pass across the entire project using 3 agents 
 4. **Validate**: Run the full test suite one final time to ensure no fixes broke anything.
 
 5. **Result**:
-   - If all tests pass and all checks are resolved: output `ALL_TESTS_PASS`
+   - If all tests pass and all checks are resolved: output `<promise>ALL_TESTS_PASS</promise>`
    - If issues remain: output `TESTS_FAILED` with a summary of remaining issues
 
 6. **Clean up the team** when done.
@@ -50,7 +52,7 @@ Run the critic inside a Ralph Loop for automatic fresh-context retries:
 
 ```bash
 claude --dangerously-skip-permissions
-/ralph-loop "/maestro.critic" --completion-promise "ALL_TESTS_PASS"
+/ralph-loop "/maestro-critic" --completion-promise "ALL_TESTS_PASS"
 ```
 
 Each iteration gets a fresh context window. If validation fails, exit with `TESTS_FAILED` — the Ralph Loop will restart with clean context, re-read the codebase (including any fixes from the previous iteration), and try again.

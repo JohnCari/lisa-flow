@@ -1,6 +1,8 @@
 ---
+name: maestro-virtuoso
 description: "Maestro Virtuoso — perpetual improvement engine (Phase 3)"
 argument-hint: "[optional focus area]"
+user-invocable: true
 ---
 
 ## User Input
@@ -19,7 +21,7 @@ Virtuoso is Phase 3 of Maestro: a perpetual improvement engine that reads everyt
 ```bash
 claude --dangerously-skip-permissions
 # Then in the session:
-/ralph-loop "/virtuoso" --completion-promise "ALL_IMPROVEMENTS_COMPLETE"
+/ralph-loop "/maestro-virtuoso" --completion-promise "ALL_IMPROVEMENTS_COMPLETE"
 ```
 
 Each iteration gets a fresh context window. `IMPROVEMENT_PLAN.md` is the shared state between iterations.
@@ -38,9 +40,13 @@ Study the project thoroughly before doing anything. "Study" means read, understa
 
 4. **Run `git log --oneline -50`** to discover what features have been built, what's been committed, and the project's trajectory. This prevents re-doing work or conflicting with recent changes.
 
-5. **Study the codebase** — use subagents (Task tool with `subagent_type: "Explore"`) to scan `src/`, `tests/`, config files, and any other relevant directories. Understand existing code patterns, what features exist, and how they're structured. Don't assume something isn't implemented; search first.
+5. **Read `queue/masterplan.md`** (if it exists) — understand the original project vision and current documented state. This is the high-level "what and why" that complements the task-level `IMPROVEMENT_PLAN.md`.
 
-6. **Study git history** — run `git log --oneline -30` to understand recent work and the project's trajectory.
+6. **Read `queue/*.md` feature files** (excluding `masterplan.md`) — understand the original feature specs and any `## Implementation Updates` sections appended by previous iterations. This tells you what was planned vs. what was actually built and changed.
+
+7. **Study the codebase** — use subagents (Task tool with `subagent_type: "Explore"`) to scan `src/`, `tests/`, config files, and any other relevant directories. Understand existing code patterns, what features exist, and how they're structured. Don't assume something isn't implemented; search first.
+
+8. **Study git history** — run `git log --oneline -30` to understand recent work and the project's trajectory.
 
 ---
 
@@ -153,10 +159,115 @@ Run validation yourself — do NOT delegate this to teammates. This is deliberat
 
 ### Phase 7: UPDATE PLAN
 
+#### 7a. Update `IMPROVEMENT_PLAN.md`
+
 1. Mark completed tasks as `[DONE]` in `IMPROVEMENT_PLAN.md`
 2. Update the `Last updated` timestamp and iteration number
 3. Add any newly discovered improvements found during implementation to the appropriate priority section
 4. Note any blocked tasks or dependencies
+
+#### 7b. Update affected feature files in `queue/`
+
+For each feature file in `queue/` whose behavior was changed by this iteration's improvements:
+
+1. Read the feature file
+2. If it does not already have an `## Implementation Updates` section, append one
+3. Append an entry under `## Implementation Updates` documenting what changed:
+
+```markdown
+## Implementation Updates
+
+### Iteration N — <timestamp>
+- **[ID-XXX]** What changed and why
+- **[ID-YYY]** What changed and why
+```
+
+**Rules:**
+- Never modify the original spec content above `## Implementation Updates` — append only
+- Only update feature files whose behavior was actually affected by changes in this iteration
+- Each entry references the task ID from `IMPROVEMENT_PLAN.md` for traceability
+- If no feature files were affected (e.g. the improvements were purely structural or test-only), skip this step
+
+#### 7c. Update `queue/masterplan.md`
+
+Update `masterplan.md` to reflect the current state of the project. This is not a task list — it is a concise project overview that the artist uses as shared context for all workers.
+
+Format:
+
+```markdown
+# <Project Name>
+
+> <One-line project description>
+
+## Current State
+
+<2-5 sentences describing what exists today: which features are built, what works, what the architecture looks like. State facts, not aspirations.>
+
+## Architecture
+
+<Brief description of the tech stack, project structure, and key patterns. Only include what actually exists in the codebase.>
+
+## Features
+
+- **<feature-name>**: <one-line status — what it does, whether it's complete>
+- **<feature-name>**: <one-line status>
+
+## Standards
+
+<Reference to CLAUDE.md for coding standards. Note any project-specific conventions that emerged during implementation.>
+
+Last updated: <timestamp> (virtuoso iteration N)
+```
+
+**Rules:**
+- Reflect reality, not aspirations — only document what actually exists in the codebase
+- Keep it concise — this gets prepended to every feature file for artist workers
+- If `masterplan.md` currently contains only "Template" or is empty, replace the entire content
+- If `masterplan.md` already has structured content, update it in place (preserve the format, update the facts)
+- Always update the `Last updated` timestamp
+
+#### 7d. Create new feature files for discovered features
+
+If during this iteration you discovered that **new features** (not just improvements to existing code) are needed:
+
+1. Glob `queue/*.md` (excluding `masterplan.md`) to find the highest existing number
+2. Create new files starting from the next available number: `queue/<NNN>-<name>.md`
+3. Each new feature file must start with a virtuoso-origin marker and contain a clear spec:
+
+```markdown
+<!-- virtuoso-generated: iteration N, <timestamp> -->
+# <Feature Name>
+
+<Clear description of what this feature should do and why it's needed.>
+
+## Context
+
+Discovered during virtuoso iteration N while working on [ID-XXX].
+<Why this feature is needed — what gap or opportunity was identified.>
+
+## Acceptance Criteria
+
+- <Concrete, testable criterion>
+- <Concrete, testable criterion>
+```
+
+**Rules:**
+- Only create feature files for genuinely new features — not for bug fixes, refactors, or improvements to existing features (those belong in `IMPROVEMENT_PLAN.md`)
+- New feature files are NOT implemented in the current iteration — they are queued for a future `/maestro-artist` run or a subsequent virtuoso iteration. This respects the "one batch per iteration" rule
+- The `<!-- virtuoso-generated -->` comment distinguishes these from user-created feature files
+- Also add a note in `IMPROVEMENT_PLAN.md` under a new `## Queued Features` section referencing the new file(s)
+
+#### 7e. Commit plan and queue updates
+
+Stage and commit all changes to `IMPROVEMENT_PLAN.md`, `queue/masterplan.md`, and any `queue/*.md` files modified or created in this phase:
+
+```
+virtuoso: update project state (iteration N)
+
+Updated IMPROVEMENT_PLAN.md, masterplan.md, and affected feature files.
+```
+
+This is a separate commit from the code changes in Phase 6 — it keeps implementation commits clean and plan updates traceable.
 
 ---
 
@@ -164,7 +275,7 @@ Run validation yourself — do NOT delegate this to teammates. This is deliberat
 
 Check if the work is done:
 
-- **If ALL tasks in `IMPROVEMENT_PLAN.md` are `[DONE]`** and no new improvements were discovered during this iteration:
+- **If ALL tasks in `IMPROVEMENT_PLAN.md` are `[DONE]`** and no new improvements were discovered during this iteration and no new feature files were created in `queue/` during this iteration:
   Output `<promise>ALL_IMPROVEMENTS_COMPLETE</promise>`
 
 - **Otherwise**: Exit normally. The Ralph Loop stop-hook will catch the exit and feed this same prompt back for the next iteration with a fresh context window.
@@ -181,3 +292,6 @@ Check if the work is done:
 6. **Plans are disposable.** If the plan has drifted from reality (code changed, tasks no longer make sense), delete it and re-assess. Regeneration is cheap. Don't force-fit work into a stale plan.
 7. **CLAUDE.md is supreme.** `CLAUDE.md` is the project's governing document. Rules and principles defined there are non-negotiable — violations are automatically Critical. CLAUDE.md supersedes all other practices. If CLAUDE.md itself needs changing, that's a manual edit, not something the virtuoso overrides.
 8. **Do not lie to exit.** Only output the completion promise when ALL improvements are genuinely done. The loop is designed to continue until true completion.
+9. **Append only to feature files.** Never modify the original spec content in `queue/*.md` files. The original spec is the source of truth for what was requested. Implementation updates go below `## Implementation Updates` only.
+10. **Masterplan reflects reality.** `queue/masterplan.md` documents what exists, not what you hope to build. Every statement in masterplan.md must be verifiable by reading the current codebase. If a feature is partially built, say so.
+11. **New features are queued, not implemented.** When you create a new `queue/NNN-name.md` file, do NOT implement it in the same iteration. It waits for a future run. This preserves the "one batch per iteration" rule and prevents scope creep within a single iteration.

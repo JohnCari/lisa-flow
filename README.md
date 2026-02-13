@@ -2,7 +2,7 @@
 
 > Agentic coding orchestrator — turns a feature queue into tested, reviewed, continuously improving code
 
-Drop feature files in `queue/`, run `/maestro.artist`, walk away.
+Drop feature files in `queue/`, run `/maestro-artist`, walk away.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ Maestro uses two Claude Code parallelism features:
 ```
    PHASE 1: CREATE        PHASE 2: CRITIQUE       PHASE 3: PERFECT
 ┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
-│  /maestro.artist   │  │  /maestro.critic   │  │  /maestro.virtuoso │
+│  /maestro-artist   │  │  /maestro-critic   │  │  /maestro-virtuoso │
 │                    │  │   (ralph-loop)     │  │   (ralph-loop)     │
 │  queue/ → team     │  │                    │  │                    │
 │    ANALYZE         │  │  1. run tests      │  │  ORIENT            │
@@ -45,22 +45,22 @@ Subagents:   within workers for parallel research & implementation
 #    e.g. 001-auth.md, 002-dashboard.md, 003-settings.md
 
 # 4. Build (autonomous — walk away)
-/maestro.artist
+/maestro-artist
 
 # 5. Review (autonomous — cross-feature quality)
 claude --dangerously-skip-permissions
-/ralph-loop "/maestro.critic" --completion-promise "ALL_TESTS_PASS"
+/ralph-loop "/maestro-critic" --completion-promise "ALL_TESTS_PASS"
 
 # 6. Refine (perpetual — runs for hours/days)
 claude --dangerously-skip-permissions
-/ralph-loop "/maestro.virtuoso" --completion-promise "ALL_IMPROVEMENTS_COMPLETE"
+/ralph-loop "/maestro-virtuoso" --completion-promise "ALL_IMPROVEMENTS_COMPLETE"
 ```
 
 ---
 
 ### Phase 1 — Artist
 
-`/maestro.artist` reads `queue/*.md` files, creates a `maestro-build` **agent team**, and spawns all workers in parallel — one per feature. Workers communicate with each other via `SendMessage` to coordinate on shared interfaces, announce file ownership, and avoid conflicts. `masterplan.md` is prepended to every feature for shared context.
+`/maestro-artist` reads `queue/*.md` files, creates a `maestro-build` **agent team**, and spawns all workers in parallel — one per feature. Workers communicate with each other via `SendMessage` to coordinate on shared interfaces, announce file ownership, and avoid conflicts. `masterplan.md` is prepended to every feature for shared context.
 
 Each worker runs 4 phases natively, using **subagents** for parallel research and **teammate messaging** for cross-feature coordination:
 
@@ -73,7 +73,7 @@ If tests fail, the orchestrator spawns a fresh worker with clean context (up to 
 
 ### Phase 2 — Critic
 
-`/maestro.critic` runs inside a Ralph Loop for fresh-context retries. Each iteration reads `CLAUDE.md` for project standards, runs the **full test suite** to establish a clean baseline (this is the first time all features are validated together), then spawns a `reviewer` **agent team** with 2 teammates:
+`/maestro-critic` runs inside a Ralph Loop for fresh-context retries. Each iteration reads `CLAUDE.md` for project standards, runs the **full test suite** to establish a clean baseline (this is the first time all features are validated together), then spawns a `reviewer` **agent team** with 2 teammates:
 
 - **conflict-checker** — finds and fixes cross-feature conflicts:
   - Duplicate routes or API endpoints
@@ -91,7 +91,7 @@ Both teammates fix issues they find. Final validation re-runs all tests. If vali
 
 ### Phase 3 — Virtuoso
 
-`/maestro.virtuoso` runs inside a Ralph Loop for continuous improvement. `IMPROVEMENT_PLAN.md` is shared state between iterations. Each iteration runs 8 phases:
+`/maestro-virtuoso` runs inside a Ralph Loop for continuous improvement. `IMPROVEMENT_PLAN.md` is shared state between iterations. Each iteration runs 8 phases:
 
 | Phase | What it does |
 |---|---|
@@ -101,7 +101,7 @@ Both teammates fix issues they find. Final validation re-runs all tests. If vali
 | **IMPLEMENT** | **Agent team** with file-ownership boundaries — no overlap between teammates |
 | **VALIDATE** | Single-agent backpressure: full test suite, typecheck, lint, CLAUDE.md gates. Up to 3 self-healing attempts |
 | **COMMIT** | One commit per logical change with clear "why" messages |
-| **UPDATE PLAN** | Marks tasks done, adds newly discovered improvements |
+| **UPDATE PLAN** | Marks tasks done, updates affected feature files and masterplan in `queue/`, creates new feature files for discoveries |
 | **EXIT** | Outputs `ALL_IMPROVEMENTS_COMPLETE` only when genuinely done, otherwise loops |
 
 ---
@@ -117,9 +117,9 @@ Both teammates fix issues they find. Final validation re-runs all tests. If vali
 4. Install:
    ```bash
    git clone https://github.com/JohnCari/maestro-framework.git maestro
-   cp maestro/maestro.artist.md .claude/commands/maestro.artist.md
-   cp maestro/maestro.critic.md .claude/commands/maestro.critic.md
-   cp maestro/maestro.virtuoso.md .claude/commands/maestro.virtuoso.md
+   cp -r maestro/skills/maestro-artist .claude/skills/maestro-artist
+   cp -r maestro/skills/maestro-critic .claude/skills/maestro-critic
+   cp -r maestro/skills/maestro-virtuoso .claude/skills/maestro-virtuoso
    ```
 
 Any MCP servers, plugins, or skills should be configured in your project's `CLAUDE.md` — maestro will discover and use them automatically.

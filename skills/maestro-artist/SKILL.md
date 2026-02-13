@@ -1,6 +1,8 @@
 ---
+name: maestro-artist
 description: "Maestro Artist — parallel feature builder using agent teams (Phase 1)"
 argument-hint: "[max-retries]"
+user-invocable: true
 ---
 
 ## User Input
@@ -153,7 +155,7 @@ If you need to create or modify a shared interface (types, API contracts, shared
 
 **PHASE 4: TEST**
 
-Run only the tests related to **your feature** — unit tests and feature-level integration tests you wrote. Do NOT run the full test suite (other workers are building in parallel; their incomplete code will cause false failures). The full cross-feature test suite runs later in `/maestro.critic`.
+Run only the tests related to **your feature** — unit tests and feature-level integration tests you wrote. Do NOT run the full test suite (other workers are building in parallel; their incomplete code will cause false failures). The full cross-feature test suite runs later in `/maestro-critic`.
 
 Run tests once. If all pass, output `ALL_TESTS_PASS`. If any fail, output `TESTS_FAILED` with a summary of failures. Do not retry — the orchestrator will spawn a fresh worker with clean context if needed.
 
