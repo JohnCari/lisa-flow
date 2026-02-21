@@ -1,7 +1,7 @@
 ---
 name: maestro-virtuoso
 description: "Maestro Virtuoso — Phase 3: perpetual improvement engine using agent teams and subagents. Use after /maestro-critic to continuously improve code quality, coverage, and architecture."
-argument-hint: "[optional focus area or max-iterations]"
+argument-hint: "[optional instructions]"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -12,7 +12,7 @@ disable-model-invocation: true
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty). If a focus area is provided, prioritize improvements in that area. If a number is provided, use it as `MAX_ITERATIONS`. Default is **10**.
+Interpret the user input as natural language instructions. Examples: "focus on security", "max 5 iterations", "skip test coverage, prioritize performance". If empty, use defaults. Default `MAX_ITERATIONS` is **10** unless the user specifies otherwise.
 
 ---
 

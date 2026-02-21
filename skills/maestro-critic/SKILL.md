@@ -1,7 +1,7 @@
 ---
 name: maestro-critic
 description: "Maestro Critic — Phase 2: cross-feature conflict resolution and full quality sweep using agent teams and subagents. Use after /maestro-artist to review and fix cross-feature issues."
-argument-hint: "[max-retries]"
+argument-hint: "[optional instructions]"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -12,9 +12,7 @@ disable-model-invocation: true
 $ARGUMENTS
 ```
 
-If a number is provided, use it as `MAX_RETRIES`. Default is **3**.
-
-You **MUST** consider any other user input before proceeding (if not empty).
+Interpret the user input as natural language instructions. Examples: "skip performance checks", "focus on security only", "max 5 retries". If empty, use defaults. Default `MAX_RETRIES` is **3** unless the user specifies otherwise.
 
 ---
 

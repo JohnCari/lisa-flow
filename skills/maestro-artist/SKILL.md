@@ -1,7 +1,7 @@
 ---
 name: maestro-artist
 description: "Maestro Artist — Phase 1: parallel feature builder using agent teams and subagents. Use after populating queue/*.md with feature files to build all features in parallel."
-argument-hint: "[max-retries]"
+argument-hint: "[optional instructions]"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -12,7 +12,7 @@ disable-model-invocation: true
 $ARGUMENTS
 ```
 
-If a number is provided, use it as `MAX_RETRIES`. Default is **3**.
+Interpret the user input as natural language instructions. Examples: "focus on backend only", "skip the auth feature", "max 5 retries". If empty, use defaults. Default `MAX_RETRIES` is **3** unless the user specifies otherwise.
 
 ---
 

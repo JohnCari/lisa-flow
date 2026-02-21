@@ -37,14 +37,21 @@ claude --dangerously-skip-permissions
 
 Each phase runs in a separate session. All three skills use `disable-model-invocation: true` — Claude never auto-triggers them.
 
-### Arguments
+### Arguments (optional, natural language)
 
 ```
-/maestro-artist 5                  # Up to 5 retries per feature (default: 3)
-/maestro-critic 5                  # Up to 5 review retries (default: 3)
-/maestro-virtuoso 20               # Up to 20 improvement iterations (default: 10)
-/maestro-virtuoso security         # Focus improvements on a specific area
+/maestro-artist                           # Build everything with defaults
+/maestro-artist focus on backend only     # Scope the build
+/maestro-artist skip the auth feature     # Exclude specific features
+/maestro-critic                           # Review with defaults
+/maestro-critic skip performance checks   # Narrow the review
+/maestro-critic focus on security only    # Single-category sweep
+/maestro-virtuoso                         # Improve with defaults
+/maestro-virtuoso security, max 5 iterations
+/maestro-virtuoso skip test coverage, prioritize performance
 ```
+
+The lead interprets whatever you pass. Defaults: 3 retries (artist/critic), 10 iterations (virtuoso).
 
 ## Phase Details
 
