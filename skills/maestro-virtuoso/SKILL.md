@@ -2,7 +2,6 @@
 name: maestro-virtuoso
 description: "Maestro Virtuoso — Phase 3: perpetual improvement engine using agent teams and subagents. Use after /maestro-critic to continuously improve code quality, coverage, and architecture."
 argument-hint: "[optional instructions]"
-user-invocable: true
 disable-model-invocation: true
 ---
 
@@ -18,7 +17,7 @@ Interpret the user input as natural language instructions. Examples: "focus on s
 
 ## Orchestrator
 
-You are the orchestrator — a lightweight loop controller. You coordinate iterations and delegate heavy work to **agent teams** and **subagents**. Agent teams handle parallel multi-session coordination (assessment, implementation). Subagents handle focused research and isolated operations within a single session (codebase exploration, test running). Each team you spawn gets fresh context windows automatically. `IMPROVEMENT_PLAN.md` is your shared state between iterations.
+You are the orchestrator — a lightweight loop controller. You coordinate iterations and delegate heavy work to **agent teams** and **subagents**. Agent teams handle parallel multi-session coordination (assessment, implementation). Subagents handle focused research and isolated operations within a single session (codebase exploration, test running). Each team you spawn gets fresh context windows automatically. `maestro-framework/queue/improvementplan.md` is your shared state between iterations.
 
 **Loop structure:** Repeat iterations until all improvements are complete or `MAX_ITERATIONS` is reached. Each iteration: ORIENT → ASSESS → SELECT → IMPLEMENT → VALIDATE → COMMIT → UPDATE PLAN → check if done.
 
@@ -38,15 +37,17 @@ Study the project before doing anything. Read governance files yourself, then de
 
 2. **Read `AGENTS.md`** (if it exists) — additional operational guidance, agent-specific instructions, or codebase patterns.
 
-3. **Read `IMPROVEMENT_PLAN.md`** (if it exists) — shared state from previous iterations. If it exists and has uncompleted tasks, you are resuming. If not, this is the first iteration.
+3. **Read `maestro-framework/queue/businessplan.md`** (if it exists) — business goals, vision, and priorities.
 
-4. **Run `git log --oneline -50`** to discover what features have been built, what's been committed, and the project's trajectory.
+4. **Read `maestro-framework/queue/techplan.md`** (if it exists) — technical overview, architecture, and current project state.
 
-5. **Read `queue/masterplan.md`** (if it exists) — the original project vision and current documented state.
+5. **Read `maestro-framework/queue/improvementplan.md`** (if it exists) — shared state from previous iterations. If it exists and has uncompleted tasks, you are resuming. If not, this is the first iteration.
 
-6. **Read `queue/*.md` feature files** (excluding `masterplan.md`) — the original feature specs and any `## Implementation Updates` sections from previous iterations.
+6. **Run `git log --oneline -50`** to discover what features have been built, what's been committed, and the project's trajectory.
 
-7. **Study the codebase with subagents** — use the Task tool with `subagent_type: "Explore"` to launch up to 3 parallel subagents:
+7. **Read `maestro-framework/queue/*.md` feature files** (excluding `techplan.md`, `improvementplan.md`, and `businessplan.md`) — the original feature specs and any `## Implementation Updates` sections from previous iterations.
+
+8. **Study the codebase with subagents** — use the Task tool with `subagent_type: "Explore"` to launch up to 3 parallel subagents:
    - One subagent scans `src/` for code patterns, architecture, and module structure
    - One subagent scans `tests/` for test patterns, coverage shape, and test utilities
    - One subagent scans config files, build setup, and dependency structure
@@ -55,9 +56,9 @@ Study the project before doing anything. Read governance files yourself, then de
 
 ---
 
-#### Phase 2: ASSESS (first iteration only, or when IMPROVEMENT_PLAN.md doesn't exist)
+#### Phase 2: ASSESS (first iteration only, or when maestro-framework/queue/improvementplan.md doesn't exist)
 
-**Skip this phase if `IMPROVEMENT_PLAN.md` already exists and has uncompleted tasks** — unless the plan feels stale or the codebase has diverged from what the plan describes. Plans are disposable; if the plan is wrong, delete it and reassess. Regeneration is cheap.
+**Skip this phase if `maestro-framework/queue/improvementplan.md` already exists and has uncompleted tasks** — unless the plan feels stale or the codebase has diverged from what the plan describes. Plans are disposable; if the plan is wrong, delete it and reassess. Regeneration is cheap.
 
 Create an agent team named `virtuoso-assess` with 3 teammates. **Give every teammate the `CLAUDE.md` rules** and the orientation summary from Phase 1 so they can flag violations:
 
@@ -90,7 +91,7 @@ Create an agent team named `virtuoso-assess` with 3 teammates. **Give every team
 
   **Use subagents for parallel scanning**: Use the Task tool with `subagent_type: "Explore"` to launch parallel subagents — one for security scanning, one for performance analysis, one for accessibility/UX review. Report all findings with file paths and severity.
 
-Wait for all 3 teammates to finish. Shut down all teammates and delete the `virtuoso-assess` team. Synthesize their findings into `IMPROVEMENT_PLAN.md`. **Any CLAUDE.md rule violation is automatically Priority 1: Critical** — these must be fixed before anything else.
+Wait for all 3 teammates to finish. Shut down all teammates and delete the `virtuoso-assess` team. Synthesize their findings into `maestro-framework/queue/improvementplan.md`. **Any CLAUDE.md rule violation is automatically Priority 1: Critical** — these must be fixed before anything else.
 
 ```markdown
 # Improvement Plan
@@ -119,7 +120,7 @@ Each task must include: **files** it touches (for ownership boundaries) and **ve
 
 #### Phase 3: SELECT
 
-1. Read `IMPROVEMENT_PLAN.md`
+1. Read `maestro-framework/queue/improvementplan.md`
 2. Pick the highest-priority batch of `[parallel]` tasks (up to 3-4 tasks)
 3. If no parallel tasks remain, pick the single highest-priority uncompleted task
 4. If all tasks are `[DONE]`, go back to Phase 2 to reassess
@@ -130,7 +131,7 @@ Each task must include: **files** it touches (for ownership boundaries) and **ve
 
 Create an agent team named `virtuoso-impl` with one teammate per selected task:
 
-- Each teammate owns specific files — **no overlap between teammates**. Use the `files:` field from `IMPROVEMENT_PLAN.md` to enforce boundaries. Same boundary-setting you'd do with a human team to avoid merge conflicts.
+- Each teammate owns specific files — **no overlap between teammates**. Use the `files:` field from `maestro-framework/queue/improvementplan.md` to enforce boundaries. Same boundary-setting you'd do with a human team to avoid merge conflicts.
 - Give each teammate clear instructions: which task ID, which files to modify, the `verify:` criteria, the **CLAUDE.md rules** they must not violate, and any MCP servers, plugins, or skills documented in CLAUDE.md.
 - **Teammates should use subagents for parallel work within their task**: each teammate can use the Task tool with `subagent_type: "Explore"` to research before implementing, and `subagent_type: "general-purpose"` to work on independent files in parallel — each subagent owns a different set of files to avoid conflicts.
 - The lead (you) stays in delegate mode — coordinate only, do not implement directly.
@@ -168,16 +169,16 @@ Run validation yourself — do NOT delegate this to teammates. This is deliberat
 
 #### Phase 7: UPDATE PLAN
 
-##### 7a. Update `IMPROVEMENT_PLAN.md`
+##### 7a. Update `maestro-framework/queue/improvementplan.md`
 
-1. Mark completed tasks as `[DONE]` in `IMPROVEMENT_PLAN.md`
+1. Mark completed tasks as `[DONE]` in `maestro-framework/queue/improvementplan.md`
 2. Update the `Last updated` timestamp and iteration number
 3. Add any newly discovered improvements found during implementation to the appropriate priority section
 4. Note any blocked tasks or dependencies
 
-##### 7b. Update affected feature files in `queue/`
+##### 7b. Update affected feature files in `maestro-framework/queue/`
 
-For each feature file in `queue/` whose behavior was changed by this iteration's improvements:
+For each feature file in `maestro-framework/queue/` whose behavior was changed by this iteration's improvements:
 
 1. Read the feature file
 2. If it does not already have an `## Implementation Updates` section, append one
@@ -194,12 +195,12 @@ For each feature file in `queue/` whose behavior was changed by this iteration's
 **Rules:**
 - Never modify the original spec content above `## Implementation Updates` — append only
 - Only update feature files whose behavior was actually affected by changes in this iteration
-- Each entry references the task ID from `IMPROVEMENT_PLAN.md` for traceability
+- Each entry references the task ID from `maestro-framework/queue/improvementplan.md` for traceability
 - If no feature files were affected (e.g. the improvements were purely structural or test-only), skip this step
 
-##### 7c. Update `queue/masterplan.md`
+##### 7c. Update `maestro-framework/queue/techplan.md`
 
-Update `masterplan.md` to reflect the current state of the project. This is not a task list — it is a concise project overview that the artist uses as shared context for all workers.
+Update `techplan.md` to reflect the current state of the project. This is not a task list — it is a concise project overview that the artist uses as shared context for all workers.
 
 Format:
 
@@ -231,16 +232,16 @@ Last updated: <timestamp> (virtuoso iteration N)
 **Rules:**
 - Reflect reality, not aspirations — only document what actually exists in the codebase
 - Keep it concise — this gets prepended to every feature file for artist workers
-- If `masterplan.md` currently contains only "Template" or is empty, replace the entire content
-- If `masterplan.md` already has structured content, update it in place (preserve the format, update the facts)
+- If `techplan.md` currently contains only "Template" or is empty, replace the entire content
+- If `techplan.md` already has structured content, update it in place (preserve the format, update the facts)
 - Always update the `Last updated` timestamp
 
 ##### 7d. Create new feature files for discovered features
 
 If during this iteration you discovered that **new features** (not just improvements to existing code) are needed:
 
-1. Glob `queue/*.md` (excluding `masterplan.md`) to find the highest existing number
-2. Create new files starting from the next available number: `queue/<NNN>-<name>.md`
+1. Glob `maestro-framework/queue/*.md` (excluding `techplan.md`, `improvementplan.md`, and `businessplan.md`) to find the highest existing number
+2. Create new files starting from the next available number: `maestro-framework/queue/<NNN>-<name>.md`
 3. Each new feature file must start with a virtuoso-origin marker and contain a clear spec:
 
 ```markdown
@@ -261,19 +262,19 @@ Discovered during virtuoso iteration N while working on [ID-XXX].
 ```
 
 **Rules:**
-- Only create feature files for genuinely new features — not for bug fixes, refactors, or improvements to existing features (those belong in `IMPROVEMENT_PLAN.md`)
+- Only create feature files for genuinely new features — not for bug fixes, refactors, or improvements to existing features (those belong in `maestro-framework/queue/improvementplan.md`)
 - New feature files are NOT implemented in the current iteration — they are queued for a future `/maestro-artist` run or a subsequent virtuoso iteration. This respects the "one batch per iteration" rule
 - The `<!-- virtuoso-generated -->` comment distinguishes these from user-created feature files
-- Also add a note in `IMPROVEMENT_PLAN.md` under a new `## Queued Features` section referencing the new file(s)
+- Also add a note in `maestro-framework/queue/improvementplan.md` under a new `## Queued Features` section referencing the new file(s)
 
 ##### 7e. Commit plan and queue updates
 
-Stage and commit all changes to `IMPROVEMENT_PLAN.md`, `queue/masterplan.md`, and any `queue/*.md` files modified or created in this phase:
+Stage and commit all changes to `maestro-framework/queue/improvementplan.md`, `maestro-framework/queue/techplan.md`, and any `maestro-framework/queue/*.md` files modified or created in this phase:
 
 ```
 virtuoso: update project state (iteration N)
 
-Updated IMPROVEMENT_PLAN.md, masterplan.md, and affected feature files.
+Updated maestro-framework/queue/improvementplan.md, techplan.md, and affected feature files.
 ```
 
 This is a separate commit from the code changes in Phase 6 — it keeps implementation commits clean and plan updates traceable.
@@ -284,7 +285,7 @@ This is a separate commit from the code changes in Phase 6 — it keeps implemen
 
 Check if the work is done:
 
-- **If ALL tasks in `IMPROVEMENT_PLAN.md` are `[DONE]`** and no new improvements were discovered during this iteration and no new feature files were created in `queue/` during this iteration:
+- **If ALL tasks in `maestro-framework/queue/improvementplan.md` are `[DONE]`** and no new improvements were discovered during this iteration and no new feature files were created in `maestro-framework/queue/` during this iteration:
   Output `ALL_IMPROVEMENTS_COMPLETE` and stop.
 
 - **Otherwise**: Continue to the next iteration. You will spawn fresh agent teams with fresh context windows — teammates never carry stale context between iterations.
@@ -296,7 +297,7 @@ Check if the work is done:
 If `MAX_ITERATIONS` is reached before all improvements are complete, output:
 
 ```
-ITERATIONS_EXHAUSTED — <N> iterations completed, <M> tasks remaining in IMPROVEMENT_PLAN.md
+ITERATIONS_EXHAUSTED — <N> iterations completed, <M> tasks remaining in maestro-framework/queue/improvementplan.md
 ```
 
 ---
@@ -307,12 +308,12 @@ ITERATIONS_EXHAUSTED — <N> iterations completed, <M> tasks remaining in IMPROV
 2. **One batch per iteration.** Don't try to do everything in one pass. Pick a focused batch (3-4 tasks max), implement, validate, commit, check. Fresh teams next iteration. This keeps teammates in the smart zone (~20-40% context utilization).
 3. **Never modify tests to make them pass.** Fix the implementation instead. Tests are backpressure — they define what "done" means.
 4. **Only 1 agent for validation.** Tests run sequentially in one context — this is deliberate backpressure. Incomplete work fails automatically.
-5. **Keep the plan updated.** `IMPROVEMENT_PLAN.md` is the bridge between iterations. If you don't update it, the next iteration starts blind.
+5. **Keep the plan updated.** `maestro-framework/queue/improvementplan.md` is the bridge between iterations. If you don't update it, the next iteration starts blind.
 6. **Plans are disposable.** If the plan has drifted from reality (code changed, tasks no longer make sense), delete it and re-assess. Regeneration is cheap. Don't force-fit work into a stale plan.
 7. **CLAUDE.md is supreme.** `CLAUDE.md` is the project's governing document. Rules and principles defined there are non-negotiable — violations are automatically Critical. CLAUDE.md supersedes all other practices. If CLAUDE.md itself needs changing, that's a manual edit, not something the virtuoso overrides.
 8. **Do not lie to exit.** Only output `ALL_IMPROVEMENTS_COMPLETE` when ALL improvements are genuinely done. The loop is designed to continue until true completion.
-9. **Append only to feature files.** Never modify the original spec content in `queue/*.md` files. The original spec is the source of truth for what was requested. Implementation updates go below `## Implementation Updates` only.
-10. **Masterplan reflects reality.** `queue/masterplan.md` documents what exists, not what you hope to build. Every statement in masterplan.md must be verifiable by reading the current codebase. If a feature is partially built, say so.
-11. **New features are queued, not implemented.** When you create a new `queue/NNN-name.md` file, do NOT implement it in the same iteration. It waits for a future run. This preserves the "one batch per iteration" rule and prevents scope creep within a single iteration.
+9. **Append only to feature files.** Never modify the original spec content in `maestro-framework/queue/*.md` files. The original spec is the source of truth for what was requested. Implementation updates go below `## Implementation Updates` only.
+10. **Masterplan reflects reality.** `maestro-framework/queue/techplan.md` documents what exists, not what you hope to build. Every statement in techplan.md must be verifiable by reading the current codebase. If a feature is partially built, say so.
+11. **New features are queued, not implemented.** When you create a new `maestro-framework/queue/NNN-name.md` file, do NOT implement it in the same iteration. It waits for a future run. This preserves the "one batch per iteration" rule and prevents scope creep within a single iteration.
 12. **Clean up teams between iterations.** Always shut down teammates and delete the team before starting the next phase or iteration. This ensures the next team spawns with completely fresh context.
 13. **Use subagents to preserve context.** Delegate heavy codebase scanning to `Explore` subagents and verbose operations (test suites, linting) to `general-purpose` subagents. This keeps your main context and your teammates' contexts clean for decision-making and implementation.

@@ -2,7 +2,6 @@
 name: maestro-critic
 description: "Maestro Critic — Phase 2: cross-feature conflict resolution and full quality sweep using agent teams and subagents. Use after /maestro-artist to review and fix cross-feature issues."
 argument-hint: "[optional instructions]"
-user-invocable: true
 disable-model-invocation: true
 ---
 
@@ -23,8 +22,10 @@ You are the orchestrator. You coordinate the retry loop and delegate work to age
 ### 0. Read Project Context
 
 1. **Read `CLAUDE.md`** for project standards, build/test commands, quality requirements, and any available MCP servers, plugins, or skills.
-2. **Read `queue/masterplan.md`** and **`queue/*.md` feature files** (excluding `masterplan.md`) to understand what each feature is supposed to do.
-3. **Research the codebase** — use the Task tool with `subagent_type: "Explore"` to launch up to 3 parallel subagents to scan the project structure:
+2. **Read `maestro-framework/queue/businessplan.md`** (if it exists) — business goals, vision, and priorities.
+3. **Read `maestro-framework/queue/techplan.md`** (if it exists) — technical overview, architecture, and current project state.
+4. **Read `maestro-framework/queue/*.md` feature files** (excluding `techplan.md`, `improvementplan.md`, and `businessplan.md`) to understand what each feature is supposed to do.
+5. **Research the codebase** — use the Task tool with `subagent_type: "Explore"` to launch up to 3 parallel subagents to scan the project structure:
    - One subagent maps the project layout: directories, entry points, config files, and tech stack
    - One subagent identifies cross-feature touchpoints: shared modules, common utilities, API routes, data models
    - One subagent reviews recent git history to understand what was built and in what order

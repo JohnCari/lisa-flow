@@ -1,8 +1,7 @@
 ---
 name: maestro-artist
-description: "Maestro Artist — Phase 1: parallel feature builder using agent teams and subagents. Use after populating queue/*.md with feature files to build all features in parallel."
+description: "Maestro Artist — Phase 1: parallel feature builder using agent teams and subagents. Use after populating maestro-framework/queue/*.md with feature files to build all features in parallel."
 argument-hint: "[optional instructions]"
-user-invocable: true
 disable-model-invocation: true
 ---
 
@@ -26,12 +25,13 @@ Read `CLAUDE.md` (if it exists) for project standards, build/test commands, codi
 
 ### 1. Read the Queue
 
-1. Glob `queue/*.md`. Exclude `masterplan.md`.
+1. Glob `maestro-framework/queue/*.md`. Exclude `techplan.md`, `improvementplan.md`, and `businessplan.md`.
 2. Sort remaining files by filename (numbered: `001-step.md`, `002-step.md`, …).
-3. If empty, error: `"No feature .md files in queue/"` and stop.
-4. Read `queue/masterplan.md` if it exists → `MASTER_PLAN`.
-5. Read each feature file → `FEATURE_CONTENT`.
-6. Check each feature for a `depends-on:` line (e.g. `depends-on: 001`). Sort features into dependency tiers:
+3. If empty, error: `"No feature .md files in maestro-framework/queue/"` and stop.
+4. Read `maestro-framework/queue/techplan.md` if it exists → `TECH_PLAN`.
+5. Read `maestro-framework/queue/businessplan.md` if it exists → `BUSINESS_PLAN`.
+6. Read each feature file → `FEATURE_CONTENT`.
+7. Check each feature for a `depends-on:` line (e.g. `depends-on: 001`). Sort features into dependency tiers:
    - **Tier 0**: Features with no `depends-on:` — spawn immediately in parallel
    - **Tier 1**: Features that depend on Tier 0 — spawn after their dependencies complete
    - **Tier N**: Features that depend on Tier N-1 — spawn after their dependencies complete
@@ -55,9 +55,12 @@ For each feature, `TaskCreate`:
 
 ### 3. Spawn All Workers (Parallel)
 
-For each feature, build `COMBINED_FEATURE`:
-- If `MASTER_PLAN` exists: `MASTER_PLAN + "\n\n---\n\n" + FEATURE_CONTENT`
-- Otherwise: `FEATURE_CONTENT`
+For each feature, build `COMBINED_FEATURE` by prepending context (if available) to the feature content:
+- Start with `BUSINESS_PLAN` (if it exists) — business goals and vision
+- Then `TECH_PLAN` (if it exists) — technical overview and current state
+- Then `FEATURE_CONTENT` — the specific feature spec
+- Separate each section with `"\n\n---\n\n"`
+- If neither plan exists, use `FEATURE_CONTENT` alone
 
 Build a `TEAM_ROSTER` — a plain-text list of all workers and their assigned features:
 
