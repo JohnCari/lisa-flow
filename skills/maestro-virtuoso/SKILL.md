@@ -1,8 +1,9 @@
 ---
 name: maestro-virtuoso
-description: "Maestro Virtuoso — perpetual improvement engine (Phase 3)"
-argument-hint: "[optional focus area]"
+description: "Maestro Virtuoso — Phase 3: perpetual improvement engine using agent teams and subagents. Use after /maestro-critic to continuously improve code quality, coverage, and architecture."
+argument-hint: "[optional focus area or max-iterations]"
 user-invocable: true
+disable-model-invocation: true
 ---
 
 ## User Input
@@ -11,48 +12,54 @@ user-invocable: true
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty). If a focus area is provided, prioritize improvements in that area.
-
-## Outline
-
-Virtuoso is Phase 3 of Maestro: a perpetual improvement engine that reads everything built by the orchestrator/worker (Phase 1) and reviewer (Phase 2), finds improvements, implements them with agent teams, validates, commits, and exits — triggering the next iteration via the Ralph Loop stop-hook.
-
-**How to run:**
-```bash
-claude --dangerously-skip-permissions
-# Then in the session:
-/ralph-loop "/maestro-virtuoso" --completion-promise "ALL_IMPROVEMENTS_COMPLETE"
-```
-
-Each iteration gets a fresh context window. `IMPROVEMENT_PLAN.md` is the shared state between iterations.
+You **MUST** consider the user input before proceeding (if not empty). If a focus area is provided, prioritize improvements in that area. If a number is provided, use it as `MAX_ITERATIONS`. Default is **10**.
 
 ---
 
-### Phase 1: ORIENT
+## Orchestrator
 
-Study the project thoroughly before doing anything. "Study" means read, understand, and internalize — not skim.
+You are the orchestrator — a lightweight loop controller. You coordinate iterations and delegate heavy work to **agent teams** and **subagents**. Agent teams handle parallel multi-session coordination (assessment, implementation). Subagents handle focused research and isolated operations within a single session (codebase exploration, test running). Each team you spawn gets fresh context windows automatically. `IMPROVEMENT_PLAN.md` is your shared state between iterations.
 
-1. **Read `CLAUDE.md` FIRST** — this is the project's governing document. It defines core principles, coding standards, build/test commands, quality requirements, and any available MCP servers, plugins, or skills. **`CLAUDE.md` is NON-NEGOTIABLE**: any rule or principle defined there is a hard constraint that cannot be overridden. Everything you do in this iteration must comply with it. Use whatever tools are documented there throughout all phases.
+**Loop structure:** Repeat iterations until all improvements are complete or `MAX_ITERATIONS` is reached. Each iteration: ORIENT → ASSESS → SELECT → IMPLEMENT → VALIDATE → COMMIT → UPDATE PLAN → check if done.
+
+---
+
+### Iteration Loop
+
+For each iteration (1 to `MAX_ITERATIONS`):
+
+---
+
+#### Phase 1: ORIENT
+
+Study the project before doing anything. Read governance files yourself, then delegate heavy codebase exploration to subagents.
+
+1. **Read `CLAUDE.md` FIRST** — project governing document. Rules defined here are non-negotiable hard constraints. Use whatever tools are documented there throughout all phases.
 
 2. **Read `AGENTS.md`** (if it exists) — additional operational guidance, agent-specific instructions, or codebase patterns.
 
-3. **Read `IMPROVEMENT_PLAN.md`** (if it exists) — this is your shared state from previous iterations. If it exists, you are resuming. If not, this is the first iteration.
+3. **Read `IMPROVEMENT_PLAN.md`** (if it exists) — shared state from previous iterations. If it exists and has uncompleted tasks, you are resuming. If not, this is the first iteration.
 
-4. **Run `git log --oneline -50`** to discover what features have been built, what's been committed, and the project's trajectory. This prevents re-doing work or conflicting with recent changes.
+4. **Run `git log --oneline -50`** to discover what features have been built, what's been committed, and the project's trajectory.
 
-5. **Read `queue/masterplan.md`** (if it exists) — understand the original project vision and current documented state. This is the high-level "what and why" that complements the task-level `IMPROVEMENT_PLAN.md`.
+5. **Read `queue/masterplan.md`** (if it exists) — the original project vision and current documented state.
 
-6. **Read `queue/*.md` feature files** (excluding `masterplan.md`) — understand the original feature specs and any `## Implementation Updates` sections appended by previous iterations. This tells you what was planned vs. what was actually built and changed.
+6. **Read `queue/*.md` feature files** (excluding `masterplan.md`) — the original feature specs and any `## Implementation Updates` sections from previous iterations.
 
-7. **Study the codebase** — use subagents (Task tool with `subagent_type: "Explore"`) to scan `src/`, `tests/`, config files, and any other relevant directories. Understand existing code patterns, what features exist, and how they're structured. Don't assume something isn't implemented; search first.
+7. **Study the codebase with subagents** — use the Task tool with `subagent_type: "Explore"` to launch up to 3 parallel subagents:
+   - One subagent scans `src/` for code patterns, architecture, and module structure
+   - One subagent scans `tests/` for test patterns, coverage shape, and test utilities
+   - One subagent scans config files, build setup, and dependency structure
+
+   Synthesize their findings into a brief orientation summary. This keeps heavy exploration output out of your main context while giving you a complete picture of the project's current state.
 
 ---
 
-### Phase 2: ASSESS (first iteration only, or when IMPROVEMENT_PLAN.md doesn't exist)
+#### Phase 2: ASSESS (first iteration only, or when IMPROVEMENT_PLAN.md doesn't exist)
 
 **Skip this phase if `IMPROVEMENT_PLAN.md` already exists and has uncompleted tasks** — unless the plan feels stale or the codebase has diverged from what the plan describes. Plans are disposable; if the plan is wrong, delete it and reassess. Regeneration is cheap.
 
-Create an agent team named `virtuoso-assess` with 3 teammates (use `subagent_type: "Explore"` for all — they are read-only research agents). **Give every teammate the `CLAUDE.md` rules** so they can flag violations:
+Create an agent team named `virtuoso-assess` with 3 teammates. **Give every teammate the `CLAUDE.md` rules** and the orientation summary from Phase 1 so they can flag violations:
 
 - **code-analyst**: Scan the entire codebase for:
   - **CLAUDE.md rule violations** — any code that breaks a rule or principle defined in CLAUDE.md (these are automatically Critical)
@@ -61,7 +68,8 @@ Create an agent team named `virtuoso-assess` with 3 teammates (use `subagent_typ
   - Missing error handling
   - DRY violations and code duplication
   - Inconsistent patterns across features
-  - Report all findings with file paths and line numbers.
+
+  **Use subagents for parallel scanning**: Use the Task tool with `subagent_type: "Explore"` to launch parallel subagents — one per major directory or module — to scan for issues across the codebase simultaneously. Synthesize their findings into a single report with file paths and line numbers.
 
 - **test-analyst**: Scan all tests and test configuration for:
   - **CLAUDE.md rule violations** — missing test coverage required by standards in CLAUDE.md
@@ -70,7 +78,8 @@ Create an agent team named `virtuoso-assess` with 3 teammates (use `subagent_typ
   - Flaky or brittle test patterns
   - Integration test gaps between features
   - Missing test utilities or fixtures
-  - Report all findings with file paths and line numbers.
+
+  **Use subagents for parallel scanning**: Use the Task tool with `subagent_type: "Explore"` to launch parallel subagents — one scanning test files, one scanning source files for untested exports, one checking test configuration. Report all findings with file paths and line numbers.
 
 - **quality-analyst**: Scan the entire codebase for:
   - **CLAUDE.md rule violations** — security, performance, or quality gate breaches defined in CLAUDE.md
@@ -78,9 +87,10 @@ Create an agent team named `virtuoso-assess` with 3 teammates (use `subagent_typ
   - Performance problems (N+1 queries, unnecessary re-renders, missing indexes, large imports)
   - Accessibility gaps
   - UX inconsistencies
-  - Report all findings with file paths and severity.
 
-Wait for all 3 teammates to finish. Send each a `shutdown_request` message, then delete the team. Synthesize their findings into `IMPROVEMENT_PLAN.md`. **Any CLAUDE.md rule violation is automatically Priority 1: Critical** — these must be fixed before anything else.
+  **Use subagents for parallel scanning**: Use the Task tool with `subagent_type: "Explore"` to launch parallel subagents — one for security scanning, one for performance analysis, one for accessibility/UX review. Report all findings with file paths and severity.
+
+Wait for all 3 teammates to finish. Shut down all teammates and delete the `virtuoso-assess` team. Synthesize their findings into `IMPROVEMENT_PLAN.md`. **Any CLAUDE.md rule violation is automatically Priority 1: Critical** — these must be fixed before anything else.
 
 ```markdown
 # Improvement Plan
@@ -107,7 +117,7 @@ Each task must include: **files** it touches (for ownership boundaries) and **ve
 
 ---
 
-### Phase 3: SELECT
+#### Phase 3: SELECT
 
 1. Read `IMPROVEMENT_PLAN.md`
 2. Pick the highest-priority batch of `[parallel]` tasks (up to 3-4 tasks)
@@ -116,24 +126,25 @@ Each task must include: **files** it touches (for ownership boundaries) and **ve
 
 ---
 
-### Phase 4: IMPLEMENT (agent team)
+#### Phase 4: IMPLEMENT (agent team)
 
-Create an agent team named `virtuoso-impl` with one teammate per selected task (use `subagent_type: "general-purpose"` — they need edit/write/bash access):
+Create an agent team named `virtuoso-impl` with one teammate per selected task:
 
 - Each teammate owns specific files — **no overlap between teammates**. Use the `files:` field from `IMPROVEMENT_PLAN.md` to enforce boundaries. Same boundary-setting you'd do with a human team to avoid merge conflicts.
 - Give each teammate clear instructions: which task ID, which files to modify, the `verify:` criteria, the **CLAUDE.md rules** they must not violate, and any MCP servers, plugins, or skills documented in CLAUDE.md.
-- The lead (you) stays in delegate mode — coordinate only, do not implement directly
+- **Teammates should use subagents for parallel work within their task**: each teammate can use the Task tool with `subagent_type: "Explore"` to research before implementing, and `subagent_type: "general-purpose"` to work on independent files in parallel — each subagent owns a different set of files to avoid conflicts.
+- The lead (you) stays in delegate mode — coordinate only, do not implement directly.
 
-Wait for all teammates to finish. Send each a `shutdown_request` message, then delete the team.
+Wait for all teammates to finish. Shut down all teammates and delete the `virtuoso-impl` team.
 
 ---
 
-### Phase 5: VALIDATE (backpressure — single agent, NOT parallel)
+#### Phase 5: VALIDATE (backpressure — single agent, NOT parallel)
 
 Run validation yourself — do NOT delegate this to teammates. This is deliberate backpressure: one agent, sequential, full suite. It prevents incomplete work from slipping through.
 
 1. **Discover the correct commands** from `CLAUDE.md` or `AGENTS.md`. Look for test commands, build commands, typecheck/lint commands. If none are documented, discover them from `package.json`, `Makefile`, or equivalent.
-2. Run the **full test suite** (all tests, not just the ones related to changes)
+2. **Run the full test suite in a subagent** — use the Task tool with `subagent_type: "general-purpose"` to run all tests. This isolates verbose test output from your main context. The subagent returns only the pass/fail result and any failure details.
 3. If tests fail: fix the implementation (never modify tests), re-run
 4. Run typecheck/lint if available
 5. **CLAUDE.md compliance check** — verify the changes don't violate any rule or principle from CLAUDE.md. If CLAUDE.md defines quality gates (e.g. test coverage thresholds, required documentation, security scans), run those gates now. CLAUDE.md violations are blockers — fix them before proceeding.
@@ -141,7 +152,7 @@ Run validation yourself — do NOT delegate this to teammates. This is deliberat
 
 ---
 
-### Phase 6: COMMIT
+#### Phase 6: COMMIT
 
 1. Stage all changes
 2. Commit with a clear message that captures the **why**, not just the what:
@@ -155,16 +166,16 @@ Run validation yourself — do NOT delegate this to teammates. This is deliberat
 
 ---
 
-### Phase 7: UPDATE PLAN
+#### Phase 7: UPDATE PLAN
 
-#### 7a. Update `IMPROVEMENT_PLAN.md`
+##### 7a. Update `IMPROVEMENT_PLAN.md`
 
 1. Mark completed tasks as `[DONE]` in `IMPROVEMENT_PLAN.md`
 2. Update the `Last updated` timestamp and iteration number
 3. Add any newly discovered improvements found during implementation to the appropriate priority section
 4. Note any blocked tasks or dependencies
 
-#### 7b. Update affected feature files in `queue/`
+##### 7b. Update affected feature files in `queue/`
 
 For each feature file in `queue/` whose behavior was changed by this iteration's improvements:
 
@@ -186,7 +197,7 @@ For each feature file in `queue/` whose behavior was changed by this iteration's
 - Each entry references the task ID from `IMPROVEMENT_PLAN.md` for traceability
 - If no feature files were affected (e.g. the improvements were purely structural or test-only), skip this step
 
-#### 7c. Update `queue/masterplan.md`
+##### 7c. Update `queue/masterplan.md`
 
 Update `masterplan.md` to reflect the current state of the project. This is not a task list — it is a concise project overview that the artist uses as shared context for all workers.
 
@@ -224,7 +235,7 @@ Last updated: <timestamp> (virtuoso iteration N)
 - If `masterplan.md` already has structured content, update it in place (preserve the format, update the facts)
 - Always update the `Last updated` timestamp
 
-#### 7d. Create new feature files for discovered features
+##### 7d. Create new feature files for discovered features
 
 If during this iteration you discovered that **new features** (not just improvements to existing code) are needed:
 
@@ -255,7 +266,7 @@ Discovered during virtuoso iteration N while working on [ID-XXX].
 - The `<!-- virtuoso-generated -->` comment distinguishes these from user-created feature files
 - Also add a note in `IMPROVEMENT_PLAN.md` under a new `## Queued Features` section referencing the new file(s)
 
-#### 7e. Commit plan and queue updates
+##### 7e. Commit plan and queue updates
 
 Stage and commit all changes to `IMPROVEMENT_PLAN.md`, `queue/masterplan.md`, and any `queue/*.md` files modified or created in this phase:
 
@@ -269,27 +280,39 @@ This is a separate commit from the code changes in Phase 6 — it keeps implemen
 
 ---
 
-### Phase 8: EXIT
+#### Phase 8: CHECK COMPLETION
 
 Check if the work is done:
 
 - **If ALL tasks in `IMPROVEMENT_PLAN.md` are `[DONE]`** and no new improvements were discovered during this iteration and no new feature files were created in `queue/` during this iteration:
-  Output `<promise>ALL_IMPROVEMENTS_COMPLETE</promise>`
+  Output `ALL_IMPROVEMENTS_COMPLETE` and stop.
 
-- **Otherwise**: Exit normally. The Ralph Loop stop-hook will catch the exit and feed this same prompt back for the next iteration with a fresh context window.
+- **Otherwise**: Continue to the next iteration. You will spawn fresh agent teams with fresh context windows — teammates never carry stale context between iterations.
+
+---
+
+### End of Loop
+
+If `MAX_ITERATIONS` is reached before all improvements are complete, output:
+
+```
+ITERATIONS_EXHAUSTED — <N> iterations completed, <M> tasks remaining in IMPROVEMENT_PLAN.md
+```
 
 ---
 
 ### Critical Rules
 
 1. **Study, don't assume.** Always read existing code before proposing changes. Never assume something isn't implemented — search first. Existing code patterns guide what you generate.
-2. **One batch per iteration.** Don't try to do everything in one pass. Pick a focused batch (3-4 tasks max), implement, validate, commit, exit. Fresh context next iteration. This keeps you in the smart zone (~20-40% context utilization).
+2. **One batch per iteration.** Don't try to do everything in one pass. Pick a focused batch (3-4 tasks max), implement, validate, commit, check. Fresh teams next iteration. This keeps teammates in the smart zone (~20-40% context utilization).
 3. **Never modify tests to make them pass.** Fix the implementation instead. Tests are backpressure — they define what "done" means.
 4. **Only 1 agent for validation.** Tests run sequentially in one context — this is deliberate backpressure. Incomplete work fails automatically.
 5. **Keep the plan updated.** `IMPROVEMENT_PLAN.md` is the bridge between iterations. If you don't update it, the next iteration starts blind.
 6. **Plans are disposable.** If the plan has drifted from reality (code changed, tasks no longer make sense), delete it and re-assess. Regeneration is cheap. Don't force-fit work into a stale plan.
 7. **CLAUDE.md is supreme.** `CLAUDE.md` is the project's governing document. Rules and principles defined there are non-negotiable — violations are automatically Critical. CLAUDE.md supersedes all other practices. If CLAUDE.md itself needs changing, that's a manual edit, not something the virtuoso overrides.
-8. **Do not lie to exit.** Only output the completion promise when ALL improvements are genuinely done. The loop is designed to continue until true completion.
+8. **Do not lie to exit.** Only output `ALL_IMPROVEMENTS_COMPLETE` when ALL improvements are genuinely done. The loop is designed to continue until true completion.
 9. **Append only to feature files.** Never modify the original spec content in `queue/*.md` files. The original spec is the source of truth for what was requested. Implementation updates go below `## Implementation Updates` only.
 10. **Masterplan reflects reality.** `queue/masterplan.md` documents what exists, not what you hope to build. Every statement in masterplan.md must be verifiable by reading the current codebase. If a feature is partially built, say so.
 11. **New features are queued, not implemented.** When you create a new `queue/NNN-name.md` file, do NOT implement it in the same iteration. It waits for a future run. This preserves the "one batch per iteration" rule and prevents scope creep within a single iteration.
+12. **Clean up teams between iterations.** Always shut down teammates and delete the team before starting the next phase or iteration. This ensures the next team spawns with completely fresh context.
+13. **Use subagents to preserve context.** Delegate heavy codebase scanning to `Explore` subagents and verbose operations (test suites, linting) to `general-purpose` subagents. This keeps your main context and your teammates' contexts clean for decision-making and implementation.

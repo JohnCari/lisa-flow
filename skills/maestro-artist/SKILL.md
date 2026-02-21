@@ -1,8 +1,9 @@
 ---
 name: maestro-artist
-description: "Maestro Artist — parallel feature builder using agent teams (Phase 1)"
+description: "Maestro Artist — Phase 1: parallel feature builder using agent teams and subagents. Use after populating queue/*.md with feature files to build all features in parallel."
 argument-hint: "[max-retries]"
 user-invocable: true
+disable-model-invocation: true
 ---
 
 ## User Input
@@ -87,7 +88,7 @@ Spawned <count> workers in parallel
 Wait for all workers to finish. As each worker completes, check output for `ALL_TESTS_PASS` or `TESTS_FAILED`.
 
 - **If passed**: `TaskUpdate` → `completed`. Record PASS.
-- **If failed**: shut down the failed worker. Spawn a **fresh worker** with clean context and the same prompt — the new worker sees the code already written and can fix + retest. Retry up to `MAX_RETRIES` times per feature (each retry = fresh worker = fresh context, like a Ralph Loop). Record final result. `TaskUpdate` → `completed` with result noted.
+- **If failed**: shut down the failed worker. Spawn a **fresh worker** with clean context and the same prompt — the new worker sees the code already written and can fix + retest. Retry up to `MAX_RETRIES` times per feature (each retry = fresh teammate = fresh context window). Record final result. `TaskUpdate` → `completed` with result noted.
 
 ### 5. Summary
 
