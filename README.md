@@ -53,6 +53,17 @@ Each phase runs in a separate session. All three skills use `disable-model-invoc
 
 The lead interprets whatever you pass. Defaults: 3 retries (artist/critic), 10 iterations (virtuoso).
 
+### Continuous loop with Ralph Loop (optional)
+
+Use the [Ralph Loop plugin](https://github.com/mikeyobrien/ralph-orchestrator) to chain virtuoso + critic in a repeating cycle with fresh lead context each iteration:
+
+```bash
+claude --dangerously-skip-permissions
+/ralph-loop "/maestro-virtuoso then run /maestro-critic" --max-iterations 30
+```
+
+Each of the 30 iterations: virtuoso improves the codebase → critic validates cross-feature quality → Ralph restarts with fresh context. No `--completion-promise` means it runs all 30 times without early exit.
+
 ## Phase Details
 
 ### Phase 1 — Artist
